@@ -24,12 +24,13 @@ define(function(require, exports, module) {
             this._paper.getNode().ondragstart = function(e) {
                 e.preventDefault();
             };
+         
             this._paper.shapeNode.setAttribute('transform', 'translate(0.5, 0.5)');
 
             this._addRenderContainer();
-
+            console.log(111)
             this.setRoot(this.createNode());
-
+            
             if (this._options.renderTo) {
                 this.renderTo(this._options.renderTo);
             }

@@ -152,6 +152,8 @@ define(function(require, exports, module) {
                             renderer.getRenderShape().setVisible(false);
                             lastBoxes[j] = null;
                         }
+
+                        // console.log('11111111111111')
                     }
                 }
 
@@ -212,7 +214,7 @@ define(function(require, exports, module) {
                     }
 
                 });
-
+               
                 this.fire('noderender', {
                     node: node
                 });

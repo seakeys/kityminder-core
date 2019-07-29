@@ -336,7 +336,7 @@ define(function(require, exports, module) {
                     this._lastClientSize = a;
                 },
                 'selectionchange layoutallfinish': function(e) {
-                    var selected = this.getSelectedNode();
+                    var selected = null
                     var minder = this;
 
                     /*
