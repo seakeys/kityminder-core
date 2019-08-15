@@ -111,9 +111,9 @@ define(function(require, exports, module) {
                 }
 
                 //添加模块的快捷键
-                // if (moduleDeals.commandShortcutKeys) {
-                //     this.addCommandShortcutKeys(moduleDeals.commandShortcutKeys);
-                // }
+                if (moduleDeals.commandShortcutKeys) {
+                    this.addCommandShortcutKeys(moduleDeals.commandShortcutKeys);
+                }
             }
         },
 

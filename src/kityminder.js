@@ -15,44 +15,92 @@ define(function(require, exports, module) {
 
     // 核心导出，大写的部分导出类，小写的部分简单 require 一下
     // 这里顺序是有讲究的，调整前先弄清楚依赖关系。
-
     require('./core/utils');
-    kityminder.Minder = require('./core/minder'); // KityMinder 类，暴露在 window 上的唯一变量
-    kityminder.Command = require('./core/command'); // 表示一个命令，包含命令的查询及执行
-    kityminder.Node = require('./core/node'); // 表示一个脑图节点
-    require('./core/option'); // 提供脑图选项支持
-    kityminder.Event = require('./core/event'); // 表示一个脑图中发生的事件
-    kityminder.data = require('./core/data'); //自动导入
-    require('./core/compatibility'); //兼容性
-    require('./core/status'); // 状态切换控制
-    require('./core/paper'); // 初始化渲染容器 
- 
+    kityminder.Minder = require('./core/minder');
+    kityminder.Command = require('./core/command');
+    kityminder.Node = require('./core/node');
+    require('./core/option');
+    require('./core/animate');
+    kityminder.Event = require('./core/event');
+    kityminder.data = require('./core/data');
+    require('./core/compatibility');
+    kityminder.KeyMap = require('./core/keymap');
+    require('./core/shortcut');
+    require('./core/status');
+    require('./core/paper');
+    require('./core/select');
+    require('./core/focus');
+    require('./core/keyreceiver');
     kityminder.Module = require('./core/module');
-    kityminder.Render = require('./core/render'); // 渲染
-    kityminder.Connect = require('./core/connect'); // 连接
-    kityminder.Layout = require('./core/layout'); // 布局
-    kityminder.Theme = require('./core/theme'); // 主题
-    kityminder.Template = require('./core/template'); // 模板
+    require('./core/readonly');
+    kityminder.Render = require('./core/render');
+    kityminder.Connect = require('./core/connect');
+    kityminder.Layout = require('./core/layout');
+    kityminder.Theme = require('./core/theme');
+    kityminder.Template = require('./core/template');
     kityminder.Promise = require('./core/promise');
-
+    require('./core/_boxv');
+    require('./core/patch');
 
     // 模块依赖
-    require('./module/text'); // 文本
-    require('./module/view'); // 视图
-    require('./module/basestyle'); // 基础样式
-    require('./module/expand'); // 扩展
-  
+    require('./module/arrange');
+    require('./module/basestyle');
+    require('./module/clipboard');
+    require('./module/dragtree');
+    require('./module/expand');
+    require('./module/font');
+    require('./module/hyperlink');
+    require('./module/image');
+    require('./module/image-viewer');
+    require('./module/keynav');
+    require('./module/layout');
+    require('./module/node');
+    require('./module/note');
+    require('./module/outline');
+    require('./module/priority');
+    require('./module/progress');
+    require('./module/resource');
+    require('./module/select');
+    require('./module/style');
+    require('./module/text');
+    require('./module/view');
+    require('./module/zoom');
 
-    require('./protocol/json'); // json
+    require('./protocol/json');
+    require('./protocol/text');
+    require('./protocol/markdown');
+    require('./protocol/svg');
+    require('./protocol/png');
 
-    require('./layout/mind'); // 注意
-    require('./layout/btree'); // 二叉树
+    require('./layout/mind');
+    require('./layout/btree');
+    require('./layout/filetree');
+    require('./layout/fish-bone-master');
+    require('./layout/fish-bone-slave');
+    require('./layout/tianpan');
 
+    require('./theme/default');
+    require('./theme/snow');
     require('./theme/fresh');
+    require('./theme/fish');
+    require('./theme/snow');
+    require('./theme/wire');
+    require('./theme/tianpan');
 
-    require('./connect/arc'); // 圆弧
+    require('./connect/arc');
+    require('./connect/arc_tp');
+    require('./connect/bezier');
+    require('./connect/fish-bone-master');
+    require('./connect/l');
+    require('./connect/poly');
+    require('./connect/under');
 
-    require('./template/default'); // 默认模板 - 脑图模板
+    require('./template/default');
+    require('./template/structure');
+    require('./template/filetree');
+    require('./template/right');
+    require('./template/fish-bone');
+    require('./template/tianpan');
 
     module.exports = kityminder;
 });

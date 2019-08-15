@@ -9,7 +9,6 @@ define(function(require, exports, module) {
      * 表示一个脑图节点
      */
     var MinderNode = kity.createClass('MinderNode', {
-        
 
         /**
          * 创建一个游离的脑图节点
@@ -18,7 +17,6 @@ define(function(require, exports, module) {
          *     节点的初始数据或文本
          */
         constructor: function(textOrData) {
-            // debugger
 
             // 指针
             this.parent = null;
@@ -32,9 +30,8 @@ define(function(require, exports, module) {
             };
 
             // 绘图容器
-            this.rc = new kity.Group().setId(utils.uuid('minder_node'));
-            this.rc.minderNode = this;
-// console.log(this.rc)
+            this.initContainers();
+
             if (utils.isString(textOrData)) {
                 this.setText(textOrData);
             } else if (utils.isObject(textOrData)) {
@@ -43,7 +40,8 @@ define(function(require, exports, module) {
         },
 
         initContainers: function() {
-            
+            this.rc = new kity.Group().setId(utils.uuid('minder_node'));
+            this.rc.minderNode = this;
         },
 
         /**
@@ -350,18 +348,13 @@ define(function(require, exports, module) {
         },
 
         createNode: function(textOrData, parent, index) {
-            // debugger
-            // console.log(textOrData)
             var node = new MinderNode(textOrData);
-            // console.log(node)
             this.fire('nodecreate', {
                 node: node,
                 parent: parent,
                 index: index
             });
-           
             this.appendNode(node, parent, index);
-            // console.log(node)
             return node;
         },
 
@@ -383,10 +376,7 @@ define(function(require, exports, module) {
 
         attachNode: function(node) {
             var rc = this.getRenderContainer();
-            
             node.traverse(function(current) {
-                // debugger
-                // console.log(current)
                 current.attached = true;
                 rc.addShape(current.getRenderContainer());
             });

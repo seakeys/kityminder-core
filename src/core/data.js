@@ -190,7 +190,6 @@ define(function(require, exports, module) {
          * @Date: 2015.9.20
          */
         importNode: function(node, json) {
-            // console.log(node)
             var data = json.data;
             node.data = {};
 
@@ -229,9 +228,9 @@ define(function(require, exports, module) {
             while (this._root.getChildren().length) {
                 this.removeNode(this._root.getChildren()[0]);
             }
-            
+
             json = compatibility(json);
-            // debugger
+
             this.importNode(this._root, json.root);
 
             this.setTemplate(json.template || 'default');
