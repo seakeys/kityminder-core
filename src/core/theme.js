@@ -3,8 +3,6 @@ define(function(require, exports, module) {
     var utils = require('./utils');
     var Minder = require('./minder');
     var MinderNode = require('./node');
-    var Module = require('./module');
-    var Command = require('./command');
 
     var cssLikeValueMatcher = {
         left: function(value) {
@@ -43,25 +41,7 @@ define(function(require, exports, module) {
     }
     exports.register = register;
 
-    utils.extend(Minder, {
-        getThemeList: function() {
-            return _themes;
-        }
-    });
-
     kity.extendClass(Minder, {
-
-        /**
-         * 切换脑图实例上的主题
-         * @param  {String} name 要使用的主题的名称
-         */
-        useTheme: function(name) {
-
-            this.setTheme(name);
-            this.refresh(800);
-
-            return true;
-        },
 
         setTheme: function(name) {
             if (name && !_themes[name]) throw new Error('Theme ' + name + ' not exists!');
@@ -138,38 +118,6 @@ define(function(require, exports, module) {
         getStyle: function(name) {
             return this.getMinder().getNodeStyle(this, name);
         }
-    });
-
-    Module.register('Theme', {
-        defaultOptions: {
-            defaultTheme: 'fresh-blue'
-        },
-        commands: {
-            /**
-             * @command Theme
-             * @description 设置当前脑图的主题
-             * @param {string} name 主题名称
-             *    允许使用的主题可以使用 `kityminder.Minder.getThemeList()` 查询
-             * @state
-             *   0: 始终可用
-             * @return 返回当前的主题名称
-             */
-            'theme': kity.createClass('ThemeCommand', {
-                base: Command,
-
-                execute: function(km, name) {
-                    return km.useTheme(name);
-                },
-
-                queryValue: function(km) {
-                    return km.getTheme() || 'default';
-                }
-            })
-        }
-    });
-
-    Minder.registerInitHook(function() {
-        this.setTheme();
     });
 
 });

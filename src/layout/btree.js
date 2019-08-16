@@ -18,63 +18,6 @@ define(function(require, exports, module) {
             'y': 'x'
         };
 
-        function getOrderHint(node) {
-            var hint = [];
-            var box = node.getLayoutBox();
-            var offset = 5;
-
-            if (axis == 'x') {
-                hint.push({
-                    type: 'up',
-                    node: node,
-                    area: new kity.Box({
-                        x: box.x,
-                        y: box.top - node.getStyle('margin-top') - offset,
-                        width: box.width,
-                        height: node.getStyle('margin-top')
-                    }),
-                    path: ['M', box.x, box.top - offset, 'L', box.right, box.top - offset]
-                });
-
-                hint.push({
-                    type: 'down',
-                    node: node,
-                    area: new kity.Box({
-                        x: box.x,
-                        y: box.bottom + offset,
-                        width: box.width,
-                        height: node.getStyle('margin-bottom')
-                    }),
-                    path: ['M', box.x, box.bottom + offset, 'L', box.right, box.bottom + offset]
-                });
-            } else {
-                hint.push({
-                    type: 'up',
-                    node: node,
-                    area: new kity.Box({
-                        x: box.left - node.getStyle('margin-left') - offset,
-                        y: box.top,
-                        width: node.getStyle('margin-left'),
-                        height: box.height
-                    }),
-                    path: ['M', box.left - offset, box.top, 'L', box.left - offset, box.bottom]
-                });
-
-                hint.push({
-                    type: 'down',
-                    node: node,
-                    area: new kity.Box({
-                        x: box.right + offset,
-                        y: box.top,
-                        width: node.getStyle('margin-right'),
-                        height: box.height
-                    }),
-                    path: ['M', box.right + offset, box.top, 'L', box.right + offset, box.bottom]
-                });
-            }
-            return hint;
-        }
-
         Layout.register(name, kity.createClass({
 
             base: Layout,
@@ -135,9 +78,7 @@ define(function(require, exports, module) {
                 }
 
                 this.move(children, xAdjust, yAdjust);
-            },
-
-            getOrderHint: getOrderHint
+            }
         }));
     }
 });

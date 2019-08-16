@@ -51,13 +51,7 @@ define(function(require, exports, module) {
             return this.root === this;
         },
 
-        /**
-         * 判断节点是否叶子
-         */
-        isLeaf: function() {
-            return this.children.length === 0;
-        },
-
+       
         /**
          * 获取节点的根节点
          */
@@ -65,12 +59,7 @@ define(function(require, exports, module) {
             return this.root || this;
         },
 
-        /**
-         * 获得节点的父节点
-         */
-        getParent: function() {
-            return this.parent;
-        },
+    
 
         getSiblings: function() {
             var children = this.parent.children;
@@ -114,19 +103,6 @@ define(function(require, exports, module) {
             return this.type;
         },
 
-        /**
-         * 判断当前节点是否被测试节点的祖先
-         * @param  {MinderNode}  test 被测试的节点
-         */
-        isAncestorOf: function(test) {
-            var ancestor = test.parent;
-            while (ancestor) {
-                if (ancestor == this) return true;
-                ancestor = ancestor.parent;
-            }
-            return false;
-        },
-
         getData: function(key) {
             return key ? this.data[key] : this.data;
         },
@@ -160,18 +136,7 @@ define(function(require, exports, module) {
             return this.data.text || null;
         },
 
-        /**
-         * 先序遍历当前节点树
-         * @param  {Function} fn 遍历函数
-         */
-        preTraverse: function(fn, excludeThis) {
-            var children = this.getChildren();
-            if (!excludeThis) fn(this);
-            for (var i = 0; i < children.length; i++) {
-                children[i].preTraverse(fn);
-            }
-        },
-
+    
         /**
          * 后序遍历当前节点树
          * @param  {Function} fn 遍历函数
@@ -213,105 +178,15 @@ define(function(require, exports, module) {
             return this.insertChild(node);
         },
 
-        prependChild: function(node) {
-            return this.insertChild(node, 0);
-        },
-
-        removeChild: function(elem) {
-            var index = elem,
-                removed;
-            if (elem instanceof MinderNode) {
-                index = this.children.indexOf(elem);
-            }
-            if (index >= 0) {
-                removed = this.children.splice(index, 1)[0];
-                removed.parent = null;
-                removed.root = removed;
-            }
-        },
-
-        clearChildren: function() {
-            this.children = [];
-        },
-
-        getChild: function(index) {
-            return this.children[index];
-        },
-
         getRenderContainer: function() {
             return this.rc;
         },
-
-        getCommonAncestor: function(node) {
-            return MinderNode.getCommonAncestor(this, node);
-        },
-
-        contains: function(node) {
-            return this == node || this.isAncestorOf(node);
-        },
-
-        clone: function() {
-            var cloned = new MinderNode();
-
-            cloned.data = utils.clone(this.data);
-
-            this.children.forEach(function(child) {
-                cloned.appendChild(child.clone());
-            });
-
-            return cloned;
-        },
-
-        compareTo: function(node) {
-
-            if (!utils.comparePlainObject(this.data, node.data)) return false;
-            if (!utils.comparePlainObject(this.temp, node.temp)) return false;
-            if (this.children.length != node.children.length) return false;
-
-            var i = 0;
-            while (this.children[i]) {
-                if (!this.children[i].compareTo(node.children[i])) return false;
-                i++;
-            }
-
-            return true;
-        },
-
         getMinder: function() {
             return this.getRoot().minder;
         }
     });
 
-    MinderNode.getCommonAncestor = function(nodeA, nodeB) {
-        if (nodeA instanceof Array) {
-            return MinderNode.getCommonAncestor.apply(this, nodeA);
-        }
-        switch (arguments.length) {
-            case 1:
-                return nodeA.parent || nodeA;
-
-            case 2:
-                if (nodeA.isAncestorOf(nodeB)) {
-                    return nodeA;
-                }
-                if (nodeB.isAncestorOf(nodeA)) {
-                    return nodeB;
-                }
-                var ancestor = nodeA.parent;
-                while (ancestor && !ancestor.isAncestorOf(nodeB)) {
-                    ancestor = ancestor.parent;
-                }
-                return ancestor;
-
-            default:
-                return Array.prototype.reduce.call(arguments,
-                    function(prev, current) {
-                        return MinderNode.getCommonAncestor(prev, current);
-                    },
-                    nodeA
-                );
-        }
-    };
+ 
 
     kity.extendClass(Minder, {
 
@@ -323,30 +198,6 @@ define(function(require, exports, module) {
             this._root = root;
             root.minder = this;
         },
-
-        getAllNode: function() {
-            var nodes = [];
-            this.getRoot().traverse(function(node) {
-                nodes.push(node);
-            });
-            return nodes;
-        },
-
-        getNodeById: function(id) {
-            return this.getNodesById([id])[0];
-        },
-
-        getNodesById: function(ids) {
-            var nodes = this.getAllNode();
-            var result = [];
-            nodes.forEach(function(node) {
-                if (ids.indexOf(node.getData('id')) != -1) {
-                    result.push(node);
-                }
-            });
-            return result;
-        },
-
         createNode: function(textOrData, parent, index) {
             var node = new MinderNode(textOrData);
             this.fire('nodecreate', {
@@ -364,16 +215,6 @@ define(function(require, exports, module) {
             return this;
         },
 
-        removeNode: function(node) {
-            if (node.parent) {
-                node.parent.removeChild(node);
-                this.detachNode(node);
-                this.fire('noderemove', {
-                    node: node
-                });
-            }
-        },
-
         attachNode: function(node) {
             var rc = this.getRenderContainer();
             node.traverse(function(current) {
@@ -385,22 +226,6 @@ define(function(require, exports, module) {
                 node: node
             });
         },
-
-        detachNode: function(node) {
-            var rc = this.getRenderContainer();
-            node.traverse(function(current) {
-                current.attached = false;
-                rc.removeShape(current.getRenderContainer());
-            });
-            this.fire('nodedetach', {
-                node: node
-            });
-        },
-
-        getMinderTitle: function() {
-            return this.getRoot().getText();
-        }
-
     });
 
     module.exports = MinderNode;

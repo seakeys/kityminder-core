@@ -53,33 +53,6 @@ define(function(require, exports, module) {
                 if (moduleDeals.init) {
                     moduleDeals.init.call(me, this._options);
                 }
-
-                /**
-                 * @Desc: 判断是否支持原生clipboard事件，如果支持，则对pager添加其监听
-                 * @Editor: Naixor
-                 * @Date: 2015.9.20
-                 */
-                /**
-                 * 由于当前脑图解构问题，clipboard暂时全权交由玩不托管
-                 * @Editor: Naixor
-                 * @Date: 2015.9.24
-                 */
-                // if (name === 'ClipboardModule' && this.supportClipboardEvent  && !kity.Browser.gecko) {
-                //     var on = function () {
-                //         var clipBoardReceiver = this.clipBoardReceiver || document;
-                        
-                //         if (document.addEventListener) {
-                //             clipBoardReceiver.addEventListener.apply(this, arguments);
-                //         } else {
-                //             arguments[0] = 'on' + arguments[0];
-                //             clipBoardReceiver.attachEvent.apply(this, arguments);
-                //         }
-                //     }
-                //     for (var command in moduleDeals.clipBoardEvents) {
-                //         on(command, moduleDeals.clipBoardEvents[command]);
-                //     }
-                // };
-
                 // command加入命令池子
                 dealCommands = moduleDeals.commands;
                 for (name in dealCommands) {
@@ -109,42 +82,6 @@ define(function(require, exports, module) {
                         }
                     }
                 }
-
-                //添加模块的快捷键
-                if (moduleDeals.commandShortcutKeys) {
-                    this.addCommandShortcutKeys(moduleDeals.commandShortcutKeys);
-                }
-            }
-        },
-
-        _garbage: function() {
-            this.clearSelect();
-
-            while (this._root.getChildren().length) {
-                this._root.removeChild(0);
-            }
-        },
-
-        destroy: function() {
-            var modules = this._modules;
-
-            this._resetEvents();
-            this._garbage();
-
-            for (var key in modules) {
-                if (!modules[key].destroy) continue;
-                modules[key].destroy.call(this);
-            }
-        },
-
-        reset: function() {
-            var modules = this._modules;
-
-            this._garbage();
-
-            for (var key in modules) {
-                if (!modules[key].reset) continue;
-                modules[key].reset.call(this);
             }
         }
     });

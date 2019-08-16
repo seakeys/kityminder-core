@@ -17,24 +17,6 @@ define(function(require, exports, module) {
      */
     var Layout = kity.createClass('Layout', {
 
-        /**
-         * @abstract
-         *
-         * 子类需要实现的布局算法，该算法输入一个节点，排布该节点的子节点（相对父节点的变换）
-         *
-         * @param  {MinderNode} node 需要布局的节点
-         *
-         * @example
-         *
-         * doLayout: function(node) {
-         *     var children = node.getChildren();
-         *     // layout calculation
-         *     children[i].setLayoutTransform(new kity.Matrix().translate(x, y));
-         * }
-         */
-        doLayout: function(parent, children) {
-            throw new Error('Not Implement: Layout.doLayout()');
-        },
 
         /**
          * 对齐指定的节点
@@ -160,16 +142,11 @@ define(function(require, exports, module) {
             return box;
         },
 
-        getOrderHint: function(node) {
-            return [];
-        }
+      
     });
 
     Layout.register = register;
 
-    Minder.registerInitHook(function(options) {
-        this.refresh();
-    });
 
     /**
      * 布局支持池子管理

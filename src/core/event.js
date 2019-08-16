@@ -10,30 +10,8 @@ define(function(require, exports, module) {
     var MinderEvent = kity.createClass('MindEvent', {
         constructor: function(type, params, canstop) {
             params = params || {};
-            if (params.getType && params.getType() == 'ShapeEvent') {
-
-                /**
-                 * @property kityEvent
-                 * @for MinderEvent
-                 * @description 如果事件是从一个 kity 的事件派生的，会有 kityEvent 属性指向原来的 kity 事件
-                 * @type {KityEvent}
-                 */
-                this.kityEvent = params;
-
-                /**
-                 * @property originEvent
-                 * @for MinderEvent
-                 * @description 如果事件是从原声 Dom 事件派生的（如 click、mousemove 等），会有 originEvent 指向原来的 Dom 事件
-                 * @type {DomEvent}
-                 */
-                this.originEvent = params.originEvent;
-
-            } else if (params.target && params.preventDefault) {
-                this.originEvent = params;
-            } else {
-                kity.Utils.extend(this, params);
-            }
-
+          
+            kity.Utils.extend(this, params);
             /**
              * @property type
              * @for MinderEvent
@@ -236,28 +214,6 @@ define(function(require, exports, module) {
             });
             return this;
         },
-
-        off: function(name, callback) {
-
-            var types = name.split(/\s+/);
-            var i, j, callbacks, removeIndex;
-            for (i = 0; i < types.length; i++) {
-
-                callbacks = this._eventCallbacks[types[i].toLowerCase()];
-                if (callbacks) {
-                    removeIndex = null;
-                    for (j = 0; j < callbacks.length; j++) {
-                        if (callbacks[j] == callback) {
-                            removeIndex = j;
-                        }
-                    }
-                    if (removeIndex !== null) {
-                        callbacks.splice(removeIndex, 1);
-                    }
-                }
-            }
-        },
-
         fire: function(type, params) {
             var e = new MinderEvent(type, params);
             this._fire(e);

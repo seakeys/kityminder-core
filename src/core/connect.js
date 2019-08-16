@@ -20,41 +20,17 @@ define(function(require, exports, module) {
     });
 
     kity.extendClass(MinderNode, {
-        /**
-         * @private
-         * @method getConnect()
-         * @for MinderNode
-         * @description 获取当前节点的连线类型
-         *
-         * @grammar getConnect() => {string}
-         */
-        getConnect: function() {
-            return this.data.connect || 'default';
-        },
-
+     
         getConnectProvider: function() {
             return _connectProviders[this.getConnect()] || _connectProviders['default'];
         },
 
-        /**
-         * @private
-         * @method getConnection()
-         * @for MinderNode
-         * @description 获取当前节点的连线对象
-         *
-         * @grammar getConnection() => {kity.Path}
-         */
-        getConnection: function() {
-            return this._connection || null;
-        }
+
     });
 
     kity.extendClass(Minder, {
 
-        getConnectContainer: function() {
-            return this._connectContainer;
-        },
-
+     
         createConnect: function(node) {
             if (node.isRoot()) return;
 
@@ -64,14 +40,6 @@ define(function(require, exports, module) {
 
             this._connectContainer.addShape(connection);
             this.updateConnect(node);
-        },
-
-        removeConnect: function(node) {
-            var me = this;
-            node.traverse(function(node) {
-                me._connectContainer.removeShape(node._connection);
-                node._connection = null;
-            });
         },
 
         updateConnect: function(node) {
@@ -112,9 +80,6 @@ define(function(require, exports, module) {
         events: {
             'nodeattach': function(e) {
                 this.createConnect(e.node);
-            },
-            'nodedetach': function(e) {
-                this.removeConnect(e.node);
             },
             'layoutapply layoutfinish noderender': function(e) {
                 this.updateConnect(e.node);

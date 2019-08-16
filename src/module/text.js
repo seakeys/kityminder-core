@@ -2,9 +2,9 @@ define(function(require, exports, module) {
     var kity = require('../core/kity');
     var utils = require('../core/utils');
 
-    var Minder = require('../core/minder');
+    // var Minder = require('../core/minder');
     var MinderNode = require('../core/node');
-    var Command = require('../core/command');
+    // var Command = require('../core/command');
     var Module = require('../core/module');
     var Renderer = require('../core/render');
     /**
@@ -242,25 +242,6 @@ define(function(require, exports, module) {
         }
     });
 
-    var TextCommand = kity.createClass({
-        base: Command,
-        execute: function(minder, text) {
-            var node = minder.getSelectedNode();
-            if (node) {
-                node.setText(text);
-                node.render();
-                minder.layout();
-            }
-        },
-        queryState: function(minder) {
-            return minder.getSelectedNodes().length == 1 ? 0 : -1;
-        },
-        queryValue: function(minder) {
-            var node = minder.getSelectedNode();
-            return node ? node.getText() : null;
-        }
-    });
-
     utils.extend(TextRenderer, {
         _styleHooks: [],
 
@@ -276,9 +257,6 @@ define(function(require, exports, module) {
     });
 
     Module.register('text', {
-        'commands': {
-            'text': TextCommand
-        },
         'renderers': {
             center: TextRenderer
         }
