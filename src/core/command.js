@@ -1,8 +1,6 @@
 define(function(require, exports, module) {
     var kity = require('./kity');
-    var utils = require('./utils');
     var Minder = require('./minder');
-    var MinderNode = require('./node');
     var MinderEvent = require('./event');
 
     var COMMAND_STATE_NORMAL = 0;

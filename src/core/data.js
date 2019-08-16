@@ -196,12 +196,18 @@ define(function(require, exports, module) {
             for (var field in data) {
                 node.setData(field, data[field]);
             }
-
+            // console.log(node.data)
+            // debugger
+            // 进之前是一个根节点，之后就是子节点，parent都赋上值
+            // console.log(node)
+            //     debugger
             var childrenTreeData = json.children || [];
             for (var i = 0; i < childrenTreeData.length; i++) {
                 var childNode = this.createNode(null, node);
                 this.importNode(childNode, childrenTreeData[i]);
             }
+            // console.log(node)
+            //     debugger
             return node;
         },
 
@@ -232,7 +238,7 @@ define(function(require, exports, module) {
             json = compatibility(json);
 
             this.importNode(this._root, json.root);
-
+            // debugger
             this.setTemplate(json.template || 'default');
             this.setTheme(json.theme || null);
             this.refresh();

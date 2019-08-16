@@ -3,8 +3,6 @@ define(function(require, exports, module) {
     var utils = require('./utils');
     var Minder = require('./minder');
     var MinderNode = require('./node');
-    var MinderEvent = require('./event');
-    var Command = require('./command');
 
     var _layouts = {};
     var _defaultLayout;
