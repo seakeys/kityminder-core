@@ -9,20 +9,11 @@ define(function(require, exports, module) {
      * 表示一个脑图节点
      */
     var MinderNode = kity.createClass('MinderNode', {
-
-        /**
-         * 创建一个游离的脑图节点
-         *
-         * @param {String|Object} textOrData
-         *     节点的初始数据或文本
-         */
         constructor: function(textOrData) {
-
             // 指针
             this.parent = null;
             this.root = this;
             this.children = [];
-
             // 数据
             this.data = {
                 id: utils.guid(),
@@ -30,50 +21,15 @@ define(function(require, exports, module) {
             };
 
             // 绘图容器
-            this.initContainers();
-
-            if (utils.isString(textOrData)) {
-                this.setText(textOrData);
-            } else if (utils.isObject(textOrData)) {
-                utils.extend(this.data, textOrData);
-            }
-        },
-
-        initContainers: function() {
             this.rc = new kity.Group().setId(utils.uuid('minder_node'));
             this.rc.minderNode = this;
         },
-
-        /**
-         * 判断节点是否根节点
-         */
         isRoot: function() {
             return this.root === this;
         },
-
-       
-        /**
-         * 获取节点的根节点
-         */
         getRoot: function() {
             return this.root || this;
         },
-
-    
-
-        getSiblings: function() {
-            var children = this.parent.children;
-            var siblings = [];
-            var self = this;
-            children.forEach(function(child) {
-                if (child != self) siblings.push(child);
-            });
-            return siblings;
-        },
-
-        /**
-         * 获得节点的深度
-         */
         getLevel: function() {
             var level = 0,
                 ancestor = this.parent;
@@ -108,15 +64,7 @@ define(function(require, exports, module) {
         },
 
         setData: function(key, value) {
-            if (typeof key == 'object') {
-                var data = key;
-                for (key in data) if (data.hasOwnProperty(key)) {
-                    this.data[key] = data[key];
-                }
-            }
-            else {
-                this.data[key] = value;
-            }
+            this.data[key] = value;
             return this;
         },
 
@@ -185,9 +133,6 @@ define(function(require, exports, module) {
             return this.getRoot().minder;
         }
     });
-
- 
-
     kity.extendClass(Minder, {
 
         getRoot: function() {
@@ -200,11 +145,6 @@ define(function(require, exports, module) {
         },
         createNode: function(textOrData, parent, index) {
             var node = new MinderNode(textOrData);
-            this.fire('nodecreate', {
-                node: node,
-                parent: parent,
-                index: index
-            });
             this.appendNode(node, parent, index);
             return node;
         },
@@ -222,7 +162,7 @@ define(function(require, exports, module) {
                 rc.addShape(current.getRenderContainer());
             });
             rc.addShape(node.getRenderContainer());
-            this.fire('nodeattach', {
+            this.fire('nodeattach', { // 连线
                 node: node
             });
         },

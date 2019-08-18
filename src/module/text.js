@@ -4,7 +4,6 @@ define(function(require, exports, module) {
 
     // var Minder = require('../core/minder');
     var MinderNode = require('../core/node');
-    // var Command = require('../core/command');
     var Module = require('../core/module');
     var Renderer = require('../core/render');
     /**
@@ -145,36 +144,15 @@ define(function(require, exports, module) {
             var lineHeight = node.getStyle('line-height');
 
             var fontSize = getDataOrStyle('font-size');
-            var fontFamily = getDataOrStyle('font-family') || 'default';
 
             var height = (lineHeight * fontSize) * textArr.length - (lineHeight - 1) * fontSize;
             var yStart = -height / 2;
-            var Browser = kity.Browser;
-            var adjust;
 
-            if (Browser.chrome || Browser.opera || Browser.bd ||Browser.lb === "chrome") {
-                adjust = FONT_ADJUST['chrome'][Browser.platform][fontFamily];
-            } else if (Browser.gecko) {
-                adjust = FONT_ADJUST['firefox'][Browser.platform][fontFamily];
-            } else if (Browser.sg) {
-                adjust = FONT_ADJUST['sg'][fontFamily];
-            } else if (Browser.safari) {
-                adjust = FONT_ADJUST['safari'][fontFamily];
-            } else if (Browser.ie) {
-                adjust = FONT_ADJUST['ie'][Browser.version][fontFamily];
-            } else if (Browser.edge) {
-                adjust = FONT_ADJUST['edge'][fontFamily];
-            } else if (Browser.lb) {
-                // 猎豹浏览器的ie内核兼容性模式下
-                adjust = 0.9;
-            }
 
-            textGroup.setTranslate(0, (adjust || 0) * fontSize);
+
 
             var rBox = new kity.Box(),
                 r = Math.round;
-
-            this.setTextStyle(node, textGroup);
 
             var textLength = textArr.length;
 
@@ -182,50 +160,25 @@ define(function(require, exports, module) {
 
             var i, ci, textShape, text;
 
-            if (textLength < textGroupLength) {
-                for (i = textLength, ci; ci = textGroup.getItem(i);) {
-                    textGroup.removeItem(i);
-                }
-            } else if (textLength > textGroupLength) {
-                var growth = textLength - textGroupLength;
-                while (growth--) {
-                    textShape = new kity.Text()
-                        .setAttr('text-rendering', 'inherit');
-                    if (kity.Browser.ie || kity.Browser.edge) {
-                        textShape.setVerticalAlign('top');
-                    } else {
-                        textShape.setAttr('dominant-baseline', 'text-before-edge');
-                    }
-                    textGroup.addItem(textShape);
-                }
+            var growth = textLength - textGroupLength;
+            // console.log(textGroupLength)
+            while (growth--) {
+                textShape = new kity.Text().setAttr('text-rendering', 'inherit');
+                textGroup.addItem(textShape);
             }
 
-            for (i = 0, text, textShape;
-                (text = textArr[i], textShape = textGroup.getItem(i)); i++) {
+            for (i = 0, text, textShape; (text = textArr[i], textShape = textGroup.getItem(i)); i++) {
                 textShape.setContent(text);
-                if (kity.Browser.ie || kity.Browser.edge) {
-                    textShape.fixPosition();
-                }
             }
-
-            this.setTextStyle(node, textGroup);
-
-            var textHash = node.getText() +
-                ['font-size', 'font-name', 'font-weight', 'font-style'].map(getDataOrStyle).join('/');
-
-            if (node._currentTextHash == textHash && node._currentTextGroupBox) return node._currentTextGroupBox;
-
-            node._currentTextHash = textHash;
 
             return function() {
                 textGroup.eachItem(function(i, textShape) {
                     var y = yStart + i * fontSize * lineHeight;
-
                     textShape.setY(y);
                     var bbox = textShape.getBoundaryBox();
                     rBox = rBox.merge(new kity.Box(0, y, bbox.height && bbox.width || 1, fontSize));
                 });
-
+                // console.log(rBox)
                 var nBox = new kity.Box(r(rBox.x), r(rBox.y), r(rBox.width), r(rBox.height));
 
                 node._currentTextGroupBox = nBox;
@@ -233,13 +186,6 @@ define(function(require, exports, module) {
             };
 
         },
-
-        setTextStyle: function(node, text) {
-            var hooks = TextRenderer._styleHooks;
-            hooks.forEach(function(hook) {
-                hook(node, text);
-            });
-        }
     });
 
     utils.extend(TextRenderer, {

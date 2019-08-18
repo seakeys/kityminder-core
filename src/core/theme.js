@@ -66,7 +66,7 @@ define(function(require, exports, module) {
          * @return {[type]} [description]
          */
         getTheme: function(node) {
-            return this._theme || this.getOption('defaultTheme') || 'fresh-blue';
+            return 'fresh-blue' ;
         },
 
         getThemeItems: function(node) {

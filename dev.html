@@ -25,8 +25,23 @@
     <script type="text/javascript" src="node_modules/kity/dist/kity.js"></script>
 </head>
 <body>
-    <script id="minder-view" type="application/kityminder" minder-data-type="json">
-    {
+    <div id="minder-view"></div>
+</body>
+
+<!-- *************************** Module 形式加载引入 **************************** -->
+<script type="text/javascript" src="node_modules/seajs/dist/sea-debug.js"></script>
+<script type="text/javascript">
+    /* global seajs */
+    seajs.config({
+        base: './src'
+    });
+    define('start', function(require) {
+        var Minder = require('kityminder').Minder;
+
+        // 创建 km 实例
+        var km = window.km = new Minder();
+        km.renderTo('#minder-view');
+        km.importJson({
         "root": {
             "data": {
                 "text": "百度产品"},
@@ -43,23 +58,7 @@
                 { "data": { "text": "更多", "hyperlink": "http://www.baidu.com/more" } }
             ]
         }
-    }
-    </script>
-</body>
-
-<!-- *************************** Module 形式加载引入 **************************** -->
-<script type="text/javascript" src="node_modules/seajs/dist/sea-debug.js"></script>
-<script type="text/javascript">
-    /* global seajs */
-    seajs.config({
-        base: './src'
-    });
-    define('start', function(require) {
-        var Minder = require('kityminder').Minder;
-
-        // 创建 km 实例
-        var km = window.km = new Minder();
-        km.setup('#minder-view');
+    })
     });
     seajs.use('start');
 </script>

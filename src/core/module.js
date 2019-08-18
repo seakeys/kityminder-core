@@ -21,20 +21,16 @@ define(function(require, exports, module) {
             var modulesPool = _modules;
             var modulesToLoad = this._options.modules || utils.keys(modulesPool);
 
-            this._commands = {};
             this._query = {};
             this._modules = {};
             this._rendererClasses = {};
 
             var i, name, type, module, moduleDeals,
-                dealCommands, dealEvents, dealRenderers;
+                 dealEvents, dealRenderers;
 
             var me = this;
             for (i = 0; i < modulesToLoad.length; i++) {
                 name = modulesToLoad[i];
-
-                if (!modulesPool[name]) continue;
-
                 // 执行模块初始化，抛出后续处理对象
 
                 if (typeof(modulesPool[name]) == 'function') {
@@ -44,21 +40,10 @@ define(function(require, exports, module) {
                 }
                 this._modules[name] = moduleDeals;
 
-                if (!moduleDeals) continue;
-
-                if (moduleDeals.defaultOptions) {
-                    me.setDefaultOptions(moduleDeals.defaultOptions);
-                }
-
                 if (moduleDeals.init) {
                     moduleDeals.init.call(me, this._options);
                 }
-                // command加入命令池子
-                dealCommands = moduleDeals.commands;
-                for (name in dealCommands) {
-                    this._commands[name.toLowerCase()] = new dealCommands[name]();
-                }
-
+              
                 // 绑定事件
                 dealEvents = moduleDeals.events;
                 if (dealEvents) {
@@ -69,7 +54,7 @@ define(function(require, exports, module) {
 
                 // 渲染器
                 dealRenderers = moduleDeals.renderers;
-
+                // console.log(dealRenderers)
                 if (dealRenderers) {
 
                     for (type in dealRenderers) {

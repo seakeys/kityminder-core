@@ -118,12 +118,6 @@ define(function(require, exports, module) {
                         }
                     }
                 }
-
-                for (j = 0; j < nodes.length; j++) {
-                    this.fire('noderender', {
-                        node: nodes[j]
-                    });
-                }
             }
         };
     }
@@ -141,7 +135,6 @@ define(function(require, exports, module) {
             return this;
         },
         getContentBox: function() {
-            //if (!this._contentBox) this.render();
             return this.parent && this.parent.isCollapsed() ? new kity.Box() : (this._contentBox || new kity.Box());
         }
     });

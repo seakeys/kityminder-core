@@ -17,17 +17,8 @@ define(function(require, exports, module) {
                 this.setTemplate(name);
                 this.refresh(duration || 800);
             },
-
-            getTemplate: function() {
-                return this._template || 'default';
-            },
-
-            setTemplate: function(name) {
-                this._template = name || null;
-            },
-
             getTemplateSupport: function(method) {
-                var supports = _templates[this.getTemplate()];
+                var supports = _templates['right'];
                 return supports && supports[method];
             },
 

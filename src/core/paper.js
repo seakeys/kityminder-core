@@ -18,53 +18,41 @@ define(function(require, exports, module) {
     kity.extendClass(Minder, {
 
         _initPaper: function() {
-
+            // debugger
             this._paper = new kity.Paper();
-            this._paper._minder = this;
-            this._paper.getNode().ondragstart = function(e) {
-                e.preventDefault();
-            };
-            this._paper.shapeNode.setAttribute('transform', 'translate(0.5, 0.5)');
-
-            this._addRenderContainer();
-
-            this.setRoot(this.createNode());
-
-            if (this._options.renderTo) {
-                this.renderTo(this._options.renderTo);
-            }
-        },
-
-        _addRenderContainer: function() {
-            this._rc = new kity.Group().setId(utils.uuid('minder'));
+            this._rc = new kity.Group().setId(utils.uuid('minder'))
             this._paper.addShape(this._rc);
+            this.setRoot(this.createNode());
         },
 
+        importNode: function(node, json) {
+            var data = json.data; // 数据层
+            node.data = {}; // 节点层
+
+            for (var field in data) {
+                node.setData(field, data[field]);
+            }
+            // debugger
+            var childrenTreeData = json.children || [];
+            for (var i = 0; i < childrenTreeData.length; i++) {
+                var childNode = this.createNode(null, node);
+                this.importNode(childNode, childrenTreeData[i]);
+            }
+            return node;
+        },
+        importJson: function(json) {
+            this.importNode(this._root, json.root); // this._root就是一个MinderNode节点
+            this.refresh();
+        },
+        
         renderTo: function(target) {
-            if (typeof(target) == 'string') {
-                target = document.querySelector(target);
-            }
-            if (target) {
-                if (target.tagName.toLowerCase() == 'script') {
-                    var newTarget = document.createElement('div');
-                    newTarget.id = target.id;
-                    newTarget.class = target.class;
-                    target.parentNode.insertBefore(newTarget, target);
-                    target.parentNode.removeChild(target);
-                    target = newTarget;
-                }
-                target.classList.add('km-view');
-                this._paper.renderTo(this._renderTarget = target);
-                this._bindEvents();
-                this.fire('paperrender');
-            }
+            target = document.querySelector(target);
+            this._paper.renderTo(this._renderTarget = target);
+            // 定位开始位置
+            var dragger = km._viewDragger;
+            dragger.move(new kity.Point(200, 300))
             return this;
         },
-
-        getRenderContainer: function() {
-            return this._rc;
-        },
-
         getPaper: function() {
             return this._paper;
         },
@@ -72,5 +60,12 @@ define(function(require, exports, module) {
         getRenderTarget: function() {
             return this._renderTarget;
         },
+        // createMinder: function () {
+           
+        // },
+        getRenderContainer: function() {
+            console.log(this._rc)
+            return this._rc;
+        }
     });
 });

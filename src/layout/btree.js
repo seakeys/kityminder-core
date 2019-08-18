@@ -51,10 +51,10 @@ define(function(require, exports, module) {
                     }
                 });
 
-                this.align(children, oppsite[name]);
+                this.align(children, oppsite[name]); //对齐指定的节点
                 this.stack(children, oppsite[axis]);
-
-                var bbox = this.getBranchBox(children);
+ 
+                var bbox = this.getBranchBox(children); //获取给点的节点所占的布局区域
                 var xAdjust = 0, yAdjust = 0;
 
                 if (axis == 'x') {
