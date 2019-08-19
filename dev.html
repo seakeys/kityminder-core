@@ -3,6 +3,8 @@
 <head>
     <meta charset="utf-8">
     <title>KityMinder Example</title>
+
+    <link href="favicon.ico" type="image/x-icon" rel="shortcut icon">
     <link rel="stylesheet" href="src/kityminder.css" rel="stylesheet">
 
     <style type="text/css">
@@ -25,7 +27,29 @@
     <script type="text/javascript" src="node_modules/kity/dist/kity.js"></script>
 </head>
 <body>
-    <div id="minder-view"></div>
+    <script id="minder-view" type="application/kityminder" minder-data-type="json">
+    {
+        "root": {
+            "data": {
+                "text": "百度产品",
+                "image": "https://www.baidu.com/img/bd_logo1.png?where=super",
+                "imageSize": { "width": 270, "height": 129 }
+            },
+            "children": [
+                { "data": { "text": "新闻" } },
+                { "data": { "text": "网页", "priority": 1 } },
+                { "data": { "text": "贴吧", "priority": 2 } },
+                { "data": { "text": "知道", "priority": 2 } },
+                { "data": { "text": "音乐", "priority": 3 } },
+                { "data": { "text": "图片", "priority": 3 } },
+                { "data": { "text": "视频", "priority": 3 } },
+                { "data": { "text": "地图", "priority": 3 } },
+                { "data": { "text": "百科", "priority": 3 } },
+                { "data": { "text": "更多", "hyperlink": "http://www.baidu.com/more" } }
+            ]
+        }
+    }
+    </script>
 </body>
 
 <!-- *************************** Module 形式加载引入 **************************** -->
@@ -40,25 +64,7 @@
 
         // 创建 km 实例
         var km = window.km = new Minder();
-        km.renderTo('#minder-view');
-        km.importJson({
-        "root": {
-            "data": {
-                "text": "百度产品"},
-            "children": [
-                { "data": { "text": "新闻" } },
-                { "data": { "text": "网页", "priority": 1 } },
-                { "data": { "text": "贴吧", "priority": 2 } },
-                { "data": { "text": "知道", "priority": 2 } },
-                { "data": { "text": "音乐", "priority": 3 } },
-                { "data": { "text": "图片", "priority": 3 } },
-                { "data": { "text": "视频", "priority": 3 } },
-                { "data": { "text": "地图", "priority": 3 } },
-                { "data": { "text": "百科", "priority": 3 } },
-                { "data": { "text": "更多", "hyperlink": "http://www.baidu.com/more" } }
-            ]
-        }
-    })
+        km.setup('#minder-view');
     });
     seajs.use('start');
 </script>
