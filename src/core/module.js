@@ -54,7 +54,7 @@ define(function(require, exports, module) {
 
                 // 渲染器
                 dealRenderers = moduleDeals.renderers;
-                // console.log(dealRenderers)
+                console.log(dealRenderers)
                 if (dealRenderers) {
 
                     for (type in dealRenderers) {

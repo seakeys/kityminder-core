@@ -10,17 +10,19 @@ define(function(require, exports, module) {
 
     function register(name, provider) {
         _connectProviders[name] = provider;
+        console.log(_connectProviders[name])
     }
 
-    register('default', function(node, parent, connection) {
-        connection.setPathData([
-            'M', parent.getLayoutVertexOut(),
-            'L', node.getLayoutVertexIn()
-        ]);
-    });
+    // register('default', function(node, parent, connection) {
+    //     connection.setPathData([
+    //         'M', parent.getLayoutVertexOut(),
+    //         'L', node.getLayoutVertexIn()
+    //     ]);
+    // });
 
     kity.extendClass(MinderNode, {
         getConnectProvider: function() {
+            
             return _connectProviders[this.getConnect()];
         }
     });

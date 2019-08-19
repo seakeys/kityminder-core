@@ -49,6 +49,7 @@ define(function(require, exports, module) {
         return {
             renderNodeBatch: function(nodes) {
                 var rendererClasses = this._rendererClasses;
+                console.log(rendererClasses)
                 var lastBoxes = [];
                 var rendererCount = 0;
                 var i, j, renderer, node;
@@ -61,9 +62,9 @@ define(function(require, exports, module) {
                         createRendererForNode(node, rendererClasses);
                     }
                     node._contentBox = new kity.Box();
-                    this.fire('beforerender', {
-                        node: node
-                    });
+                    // this.fire('beforerender', {
+                    //     node: node
+                    // });
                 }
 
                 // 所有节点渲染器数量是一致的

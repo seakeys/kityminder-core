@@ -28,11 +28,13 @@ define(function(require, exports, module) {
             }
         }
     });
+    
 
     Minder.version = '1.4.43';
 
     Minder.registerInitHook = function(hook) {
         _initHooks.push(hook);
+        // console.log(_initHooks)
     };
 
     module.exports = Minder;

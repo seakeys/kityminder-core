@@ -12,7 +12,7 @@ define(function(require, exports, module) {
         _layouts[name] = layout;
         _defaultLayout = _defaultLayout || name;
     }
-
+    console.log(_defaultLayout)
     /**
      * @class Layout 布局基类，具体布局需要从该类派生
      */
@@ -347,7 +347,7 @@ define(function(require, exports, module) {
 
         refresh: function() {
             this.getRoot().renderTree();
-            this.layout().fire('contentchange');
+            this.layout();
             return this;
         },
 

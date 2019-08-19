@@ -38,6 +38,7 @@ define(function(require, exports, module) {
      */
     function register(name, theme) {
         _themes[name] = theme;
+        console.log(_themes)
     }
     exports.register = register;
 

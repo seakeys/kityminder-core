@@ -140,6 +140,7 @@ define(function(require, exports, module) {
         },
 
         setRoot: function(root) {
+            console.log(root)
             this._root = root;
             root.minder = this;
         },
@@ -162,6 +163,7 @@ define(function(require, exports, module) {
                 rc.addShape(current.getRenderContainer());
             });
             rc.addShape(node.getRenderContainer());
+            // debugger
             this.fire('nodeattach', { // 连线
                 node: node
             });

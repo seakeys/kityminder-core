@@ -20,9 +20,11 @@ define(function(require, exports, module) {
         _initPaper: function() {
             // debugger
             this._paper = new kity.Paper();
-            this._rc = new kity.Group().setId(utils.uuid('minder'))
-            this._paper.addShape(this._rc);
-            this.setRoot(this.createNode());
+            new kity.Group().setId(utils.uuid('minder')).pipe((val) => {
+                this._rc = val
+                this._paper.addShape(val);
+                this.setRoot(this.createNode());
+            })
         },
 
         importNode: function(node, json) {
@@ -41,6 +43,7 @@ define(function(require, exports, module) {
             return node;
         },
         importJson: function(json) {
+            // debugger
             this.importNode(this._root, json.root); // this._root就是一个MinderNode节点
             this.refresh();
         },
@@ -64,7 +67,6 @@ define(function(require, exports, module) {
            
         // },
         getRenderContainer: function() {
-            console.log(this._rc)
             return this._rc;
         }
     });
