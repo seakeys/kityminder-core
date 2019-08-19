@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script type="text/javascript" src="node_modules/kity/dist/kity.js"></script>
+</head>
+<body>
+    <div id="minder-view"></div>
+    <script type="text/javascript" src="node_modules/seajs/dist/sea-debug.js"></script>
+    <script type="text/javascript">
+        seajs.config({
+            base: './src/core'
+        });
+        define('start', function(require) {
+            var kity = window.kity;
+            var utils = require('utils');
+
+            var _connectProviders = {};
+            var _templates = {
+                right:{
+                    getLayout: function(node) {
+                        return node.getData('layout') || 'right';
+                    },
+
+                    getConnect: function(node) {
+                        if (node.getLevel() == 1) return 'arc';
+                        return 'bezier';
+                    }
+                }
+            };
+            var _themes = {}
+            // (function () {
+                function hsl(h, s, l) {
+                    return kity.Color.createHSL(h, s, l);
+                }
+
+                function generate(h, compat) {
+                    return {
+                        'background': '#fbfbfb',
+
+                        'root-color': 'white',
+                        'root-background': hsl(h, 37, 60),
+                        'root-stroke': hsl(h, 37, 60),
+                        'root-font-size': 16,
+                        'root-padding': compat ? [6, 12] : [12, 24],
+                        'root-margin': compat ? 10 : [30, 100],
+                        'root-radius': 5,
+                        'root-space': 10,
+
+                        'main-color': 'black',
+                        'main-background': hsl(h, 33, 95),
+                        'main-stroke': hsl(h, 37, 60),
+                        'main-stroke-width': 1,
+                        'main-font-size': 14,
+                        'main-padding': [6, 20],
+                        'main-margin': compat ? 8 : 20,
+                        'main-radius': 3,
+                        'main-space': 5,
+
+                        'sub-color': 'black',
+                        'sub-background': 'transparent',
+                        'sub-stroke': 'none',
+                        'sub-font-size': 12,
+                        'sub-padding': compat ? [3, 5] : [5, 10],
+                        'sub-margin': compat ? [4, 8] : [15, 20],
+                        'sub-radius': 5,
+                        'sub-space': 5,
+
+                        'connect-color': hsl(h, 37, 60),
+                        'connect-width': 1,
+                        'connect-radius': 5,
+
+                        'selected-stroke': hsl(h, 26, 30),
+                        'selected-stroke-width': '3',
+                        'blur-selected-stroke': hsl(h, 10, 60),
+
+                        'marquee-background': hsl(h, 100, 80).set('a', 0.1),
+                        'marquee-stroke': hsl(h, 37, 60),
+
+                        'drop-hint-color': hsl(h, 26, 35),
+                        'drop-hint-width': 5,
+
+                        'order-hint-area-color': hsl(h, 100, 30).set('a', 0.5),
+                        'order-hint-path-color': hsl(h, 100, 25),
+                        'order-hint-path-width': 1,
+
+                        'text-selection-color': hsl(h, 100, 20),
+                        'line-height':1.5
+                    };
+                }
+
+                var plans = {
+                    red: 0,
+                    soil: 25,
+                    green: 122,
+                    blue: 204,
+                    purple: 246,
+                    pink: 334
+                };
+                var name;
+                for (name in plans) {
+                    _themes['fresh-' + name] = generate(plans[name])
+                }
+                // console.log(_themes)
+            // })()
+            
+            function register(name, provider) {
+                _connectProviders[name] = provider;
+            }
+            var connectMarker = new kity.Marker().pipe(function() {
+                var r = 7;
+                var dot = new kity.Circle(r - 1);
+                this.addShape(dot);
+                this.setRef(r - 1, 0).setViewBox(-r, -r, r + r, r + r).setWidth(r).setHeight(r);
+                this.dot = dot;
+                this.node.setAttribute('markerUnits', 'userSpaceOnUse');
+            });
+            register('arc', function(node, parent, connection, width, color) {
+
+                var box = node.getLayoutBox(),
+                    pBox = parent.getLayoutBox();
+
+                var start, end, vector;
+                var abs = Math.abs;
+                var pathData = [];
+                var side = box.x > pBox.x ? 'right' : 'left';
+                node.getMinder().getPaper().addResource(connectMarker);
+
+                start = new kity.Point(pBox.cx, pBox.cy);
+                end = side == 'left' ?
+                    new kity.Point(box.right + 2, box.cy) :
+                    new kity.Point(box.left - 2, box.cy);
+
+                vector = kity.Vector.fromPoints(start, end);
+                pathData.push('M', start);
+                pathData.push('A', abs(vector.x), abs(vector.y), 0, 0, (vector.x * vector.y > 0 ? 0 : 1), end);
+
+                connection.setMarker(connectMarker);
+                connectMarker.dot.fill(color);
+
+                connection.setPathData(pathData);
+            });
+            // 实例化Minder
+            var Minder = kity.createClass('Minder', {
+                constructor: function(options) {
+                    this._paper = new kity.Paper()
+                    new kity.Group().setId(utils.uuid('minder')).pipe((val) => {
+                        this._rc = val
+                        this._paper.addShape(val)
+                        this._connectContainer = new kity.Group().setId(utils.uuid('minder_connect_group'));
+                        this.getRenderContainer().prependShape(this._connectContainer);
+                        this._root = this.createNode()
+                        this._root.minder = this
+                    })
+                    target = document.querySelector('#minder-view');
+                    this._paper.renderTo(target);
+                    this.importNode(this._root,{
+                        "data": {
+                            "text": "百度产品"},
+                        "children": [
+                            { "data": { "text": "新闻" } },
+                            { "data": { "text": "网页", "priority": 1 } },
+                            { "data": { "text": "贴吧", "priority": 2 } },
+                            { "data": { "text": "知道", "priority": 2 } },
+                            { "data": { "text": "音乐", "priority": 3 } },
+                            { "data": { "text": "图片", "priority": 3 } },
+                            { "data": { "text": "视频", "priority": 3 } },
+                            { "data": { "text": "地图", "priority": 3 } },
+                            { "data": { "text": "百科", "priority": 3 } },
+                            { "data": { "text": "更多", "hyperlink": "http://www.baidu.com/more" } }
+                        ]
+                    })
+                    this.refresh()
+                },
+                createConnect: function(node) {
+                    var connection = new kity.Path();
+                    node._connection = connection;
+                    // console.log(this._connectContainer)
+                    this._connectContainer.addShape(connection);
+                    this.updateConnect(node);
+                },
+                updateConnect: function(node) {
+                    var connection = node._connection;
+                    var parent = node.parent;
+                    if (!parent || !connection) return;
+                    
+                    connection.setVisible(true);
+
+                    var provider = node.getConnectProvider();
+
+                    var strokeColor = 'red',
+                        strokeWidth = 2;
+
+                    connection.stroke(strokeColor, strokeWidth);
+
+                    provider(node, parent, connection, strokeWidth, strokeColor);
+
+                },
+                importNode: function(node, json) {
+                    var data = json.data; // 数据层
+                    node.data = {}; // 节点层
+
+                    for (var field in data) {
+                        node.setData(field, data[field]);
+                    }
+                    var childrenTreeData = json.children || [];
+                    for (var i = 0; i < childrenTreeData.length; i++) {
+                        var childNode = this.createNode(null, node);
+                        this.importNode(childNode, childrenTreeData[i]);
+                    }
+                    return node;
+                },
+                createNode: function(textOrData, parent, index) {
+                    var node = new MinderNode(textOrData);
+                    this.appendNode(node, parent, index);
+                    return node;
+                },
+                appendNode: function(node, parent, index) {
+                    if (parent) parent.insertChild(node, index);
+                    this.attachNode(node);
+                    return this;
+                },
+                attachNode: function(node) {
+                    var rc = this.getRenderContainer();
+                    node.traverse(function(current) {
+                        current.attached = true;
+                        rc.addShape(current.getRenderContainer());
+                    });
+                    rc.addShape(node.getRenderContainer());
+                    // debugger
+                    this.createConnect(node)
+                },
+                getRenderContainer: function() {
+                    // console.log(this)
+                    return this._rc;
+                },
+                getTemplateSupport: function(method) {
+                    var supports = _templates['right'];
+                    return supports && supports[method];
+                },
+                getPaper: function() {
+                    return this._paper;
+                },
+                // layoutJs
+                refresh: function() {
+                    this.getRoot().renderTree();
+                    this.layout();
+                    return this;
+                },
+                layout: function() {
+                    function layoutNode(node, round) {
+                        node.children.forEach(function(child) {
+                            layoutNode(child, round);
+                        });
+
+                        var layout = node.getLayoutInstance();
+                        layout.doLayout(node, node.getChildren(), round);
+                    }
+
+                    // 第一轮布局
+                    layoutNode(this.getRoot(), 1);
+
+                    this.applyLayoutResult(this.getRoot());
+
+                    return this.fire('layout');
+                },
+                applyLayoutResult: function(root, duration, callback) {
+                    root = root || this.getRoot();
+                    var me = this;
+                    function applyMatrix(node, matrix) {
+                        node.setGlobalLayoutTransform(matrix);
+                    }
+
+                    function apply(node, pMatrix) { 
+                        var matrix = node.getLayoutTransform().merge(pMatrix.clone());
+                        // 直接更新
+                        applyMatrix(node, matrix);
+                        me.fire('layoutfinish', {
+                            node: node,
+                            matrix: matrix
+                        });
+                        for (var i = 0; i < node.children.length; i++) {
+                            apply(node.children[i], matrix);
+                        }
+                    }
+                    apply(root, root.parent ? root.parent.getGlobalLayoutTransform() : new kity.Matrix());
+                    return this;
+                },
+                getLayoutInstance: function(name) {
+                    var LayoutClass = _layouts[name];
+                    if (!LayoutClass) throw new Error('Missing Layout: ' + name);
+                    var layout = new LayoutClass();
+                    return layout;
+                },
+                // nodeJs
+                getRoot: function() {
+                    return this._root;
+                },
+                // renderJs
+                renderNodeBatch: function(nodes) {
+                    var rendererClasses = {
+                        center: TextRenderer
+                    };
+                    var lastBoxes = [];
+                    var rendererCount = 0;
+                    var i, j, renderer, node;
+
+                    if (!nodes.length) return;
+
+                    for (j = 0; j < nodes.length; j++) {
+                        node = nodes[j];
+                        if (!node._renderers) {
+                            this.createRendererForNode(node, rendererClasses);
+                        }
+                        node._contentBox = new kity.Box();
+                    }
+
+                    // 所有节点渲染器数量是一致的
+                    rendererCount = nodes[0]._renderers.length;
+
+                    for (i = 0; i < rendererCount; i++) {
+
+                        // 获取延迟盒子数据
+                        for (j = 0; j < nodes.length; j++) {
+                            if (typeof(lastBoxes[j]) == 'function') {
+                                lastBoxes[j] = lastBoxes[j]();
+                            }
+                            if (!(lastBoxes[j] instanceof kity.Box)) {
+                                lastBoxes[j] = new kity.Box(lastBoxes[j]);
+                            }
+                        }
+
+                        for (j = 0; j < nodes.length; j++) {
+                            node = nodes[j];
+                            renderer = node._renderers[i];
+
+                            // 合并盒子
+                            if (lastBoxes[j]) {
+                                node._contentBox = node._contentBox.merge(lastBoxes[j]);
+                                renderer.contentBox = lastBoxes[j];
+                            }
+
+                            // 判断当前上下文是否应该渲染
+                            if (renderer.shouldRender(node)) {
+
+                                // 应该渲染，但是渲染图形没创建过，需要创建
+                                if (!renderer.getRenderShape()) {
+                                    renderer.setRenderShape(renderer.create(node));
+                                    if (renderer.bringToBack) {
+                                        node.getRenderContainer().prependShape(renderer.getRenderShape());
+                                    } else {
+                                        node.getRenderContainer().appendShape(renderer.getRenderShape());
+                                    }
+                                }
+
+                                // 强制让渲染图形显示
+                                renderer.getRenderShape().setVisible(true);
+
+                                // 更新渲染图形
+                                lastBoxes[j] = renderer.update(renderer.getRenderShape(), node, node._contentBox);
+                            }
+
+                            // 如果不应该渲染，但是渲染图形创建过了，需要隐藏起来
+                            else if (renderer.getRenderShape()) {
+                                renderer.getRenderShape().setVisible(false);
+                                lastBoxes[j] = null;
+                            }
+                        }
+                    }
+                },
+                createRendererForNode: function (node, registered) {
+                    var renderers = [];
+
+                    ['center', 'left', 'right', 'top', 'bottom', 'outline', 'outside'].forEach(function(section) {
+                        var before = 'before' + section;
+                        var after = 'after' + section;
+
+                        if (registered[before]) {
+                            renderers = renderers.concat(registered[before]);
+                        }
+                        if (registered[section]) {
+                            renderers = renderers.concat(registered[section]);
+                        }
+                        if (registered[after]) {
+                            renderers = renderers.concat(registered[after]);
+                        }
+                    });
+
+                    node._renderers = renderers.map(function(Renderer) {
+                        return new Renderer(node);
+                    });
+                },
+                // themeJs
+                getNodeStyle: function(node, name) { // 获取指定节点的样式
+                    var value = this.getStyle(node.getType() + '-' + name, node);
+                    return value !== null ? value : this.getStyle(name, node);
+                },
+                getStyle: function(item, node) { // 获得脑图实例上的样式
+                    var items = this.getThemeItems(node);
+                    var segment, dir, selector, value, matcher;
+
+                    if (item in items) return items[item];
+
+                    // 尝试匹配 CSS 数组形式的值
+                    // 比如 item 为 'pading-left'
+                    // theme 里有 {'padding': [10, 20]} 的定义，则可以返回 20
+                    segment = item.split('-');
+                    if (segment.length < 2) return null;
+
+                    dir = segment.pop();
+                    item = segment.join('-');
+
+                    if (item in items) {
+                        value = items[item];
+                        if (utils.isArray(value) && (matcher = cssLikeValueMatcher[dir])) {
+                            return matcher(value);
+                        }
+                        if (!isNaN(value)) return value;
+                    }
+
+                    return null;
+                },
+                getTheme: function(node) { //获取脑图实例上的当前主题
+                    return 'fresh-blue' ;
+                },
+                getThemeItems: function(node) {
+                    var theme = this.getTheme(node);
+                    return _themes[this.getTheme(node)];
+                },
+            });
+            var MinderNode = kity.createClass('MinderNode', {
+                constructor: function(textOrData) {
+                    // 指针
+                    this.parent = null;
+                    this.root = this;
+                    this.children = [];
+                    // 数据
+                    this.data = {
+                        id: utils.guid(),
+                        created: +new Date()
+                    };
+
+                    // 绘图容器
+                    this.rc = new kity.Group().setId(utils.uuid('minder_node'));
+                    this.rc.minderNode = this;
+                },
+                getConnectProvider: function() { // connectJs
+                    return _connectProviders[this.getConnect()];
+                },
+                getConnect: function() { // templateJs
+                    var support = this.getMinder().getTemplateSupport('getConnect') || MinderNode.prototype.getConnect;
+                    return support.call(this, this);
+                },
+                isRoot: function() {
+                    return this.root === this;
+                },
+                getRoot: function() {
+                    return this.root || this;
+                },
+                getLevel: function() {
+                    var level = 0,
+                        ancestor = this.parent;
+                    while (ancestor) {
+                        level++;
+                        ancestor = ancestor.parent;
+                    }
+                    return level;
+                },
+                getComplex: function() { // 获得节点的复杂度（即子树中节点的数量）
+                    var complex = 0;
+                    this.traverse(function() {
+                        complex++;
+                    });
+                    return complex;
+                },
+                getType: function(type) { // 获得节点的类型（root|main|sub）
+                    this.type = ['root', 'main', 'sub'][Math.min(this.getLevel(), 2)];
+                    return this.type;
+                },
+                getData: function(key) {
+                    return key ? this.data[key] : this.data;
+                },
+                setData: function(key, value) {
+                    this.data[key] = value;
+                    return this;
+                },
+                setText: function(text) { // 设置节点的文本数据
+                    return this.data.text = text;
+                },
+                getText: function() { // 获取节点的文本数据
+                    return this.data.text || null;
+                },
+                postTraverse: function(fn, excludeThis) { //后序遍历当前节点树
+                    var children = this.getChildren();
+                    for (var i = 0; i < children.length; i++) {
+                        children[i].postTraverse(fn);
+                    }
+                    if (!excludeThis) fn(this);
+                },
+                traverse: function(fn, excludeThis) {
+                    return this.postTraverse(fn, excludeThis);
+                },
+                getChildren: function() {
+                    return this.children;
+                },
+                getIndex: function() {
+                    return this.parent ? this.parent.children.indexOf(this) : -1;
+                },
+                insertChild: function(node, index) {
+                    if (index === undefined) {
+                        index = this.children.length;
+                    }
+                    if (node.parent) {
+                        node.parent.removeChild(node);
+                    }
+                    node.parent = this;
+                    node.root = this.root;
+
+                    this.children.splice(index, 0, node);
+                },
+                appendChild: function(node) {
+                    return this.insertChild(node);
+                },
+                getRenderContainer: function() {
+                    return this.rc;
+                },
+                getMinder: function() {
+                    return this.getRoot().minder;
+                },
+                // layoutJs
+                getLayoutBox: function() {
+                    var matrix = this.getGlobalLayoutTransform();
+                    return matrix.transformBox(this.getContentBox());
+                },
+                getGlobalLayoutTransform: function() { // 获取节点相对于全局的布局变换
+                    if (this._globalLayoutTransform) {
+                        return this._globalLayoutTransform;
+                    } else if (this.parent) {
+                        return this.parent.getGlobalLayoutTransform();
+                    } else {
+                        return new kity.Matrix();
+                    }
+                },
+                getLayoutInstance: function() {
+                    console.dir(Minder)
+                    return Minder.getLayoutInstance(this.getLayout());
+                },
+                getLayout: function() {
+                    var layout = this.getData('layout');
+                    layout = layout || (this.isRoot() ? undefined : this.parent.getLayout());
+                    return layout;
+                },
+                // renderJs
+                getContentBox: function() {
+                    return this.parent && this.parent.isCollapsed() ? new kity.Box() : (this._contentBox || new kity.Box());
+                },
+                renderTree: function() {
+                    if (!this.attached) return;
+                    var list = [];
+                    this.traverse(function(node) {
+                        list.push(node);
+                    });
+                    this.getMinder().renderNodeBatch(list);
+                    return this;
+                },
+                // expandJs
+                isCollapsed: function() {
+                    return !this.isExpanded();
+                },
+                isExpanded: function() {
+                    var EXPAND_STATE_DATA = 'expandState', STATE_COLLAPSE = 'collapse';
+                    var expanded = this.getData(EXPAND_STATE_DATA) !== STATE_COLLAPSE;
+                    return expanded && (this.isRoot() || this.parent.isExpanded());
+                },
+                // themeJs
+                getStyle: function(name) {
+                    return this.getMinder().getNodeStyle(this, name);
+                },
+                
+            })
+            var Renderer = kity.createClass('Renderer', {
+                constructor: function(node) {
+                    this.node = node;
+                },
+                shouldRender: function(node) {
+                    return true;
+                },
+
+                getRenderShape: function() {
+                    return this._renderShape || null;
+                },
+
+                setRenderShape: function(shape) {
+                    this._renderShape = shape;
+                }
+            });
+            var TextRenderer = kity.createClass('TextRenderer', {
+                base: Renderer,
+                create: function() {
+                    return new kity.Group().setId(utils.uuid('node_text'));
+                },
+                update: function(textGroup, node) {
+                    function getDataOrStyle(name) {
+                        return node.getData(name) || node.getStyle(name);
+                    }
+                    var nodeText = node.getText();
+                    var textArr = nodeText ? nodeText.split('\n') : [' '];
+                    var lineHeight = node.getStyle('line-height');
+                    var fontSize = getDataOrStyle('font-size');
+                    var height = (lineHeight * fontSize) * textArr.length - (lineHeight - 1) * fontSize;
+                    var yStart = -height / 2;
+                    var rBox = new kity.Box(),
+                        r = Math.round;
+                    var textLength = textArr.length;
+                    var textGroupLength = textGroup.getItems().length;
+                    var i, ci, textShape, text;
+                    var growth = textLength - textGroupLength;
+                    // console.log(textGroupLength)
+                    while (growth--) {
+                        textShape = new kity.Text().setAttr('text-rendering', 'inherit');
+                        textGroup.addItem(textShape);
+                    }
+                    for (i = 0, text, textShape; (text = textArr[i], textShape = textGroup.getItem(i)); i++) {
+                        textShape.setContent(text);
+                    }
+                    return function() {
+                        textGroup.eachItem(function(i, textShape) {
+                            var y = yStart + i * fontSize * lineHeight;
+                            textShape.setY(y);
+                            var bbox = textShape.getBoundaryBox();
+                            rBox = rBox.merge(new kity.Box(0, y, bbox.height && bbox.width || 1, fontSize));
+                        });
+                        // console.log(rBox)
+                        var nBox = new kity.Box(r(rBox.x), r(rBox.y), r(rBox.width), r(rBox.height));
+                        node._currentTextGroupBox = nBox;
+                        return nBox;
+                    };
+                },
+            });
+            Minder.version = '1.4.43';
+             var kmNew = new Minder();
+        });
+        seajs.use('start');
+    </script>
+</body>
+</html>
