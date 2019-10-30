@@ -1,0 +1,2 @@
+# kityminder-core
+kityminder-core
