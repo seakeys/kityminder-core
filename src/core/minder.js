@@ -14,7 +14,6 @@ define(function(require, exports, module) {
 
     var Minder = kity.createClass('Minder', {
         constructor: function(options) {
-            // debugger
             this._options = utils.extend({}, options);
 
             var initHooks = _initHooks.slice();
@@ -26,15 +25,15 @@ define(function(require, exports, module) {
                     initHook.call(this, this._options);
                 }
             }
+
+            this.fire('finishInitHook');
         }
     });
-    
 
     Minder.version = '1.4.43';
 
     Minder.registerInitHook = function(hook) {
         _initHooks.push(hook);
-        // console.log(_initHooks)
     };
 
     module.exports = Minder;

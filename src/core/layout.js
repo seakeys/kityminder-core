@@ -3,21 +3,40 @@ define(function(require, exports, module) {
     var utils = require('./utils');
     var Minder = require('./minder');
     var MinderNode = require('./node');
+    var MinderEvent = require('./event');
+    var Command = require('./command');
 
     var _layouts = {};
     var _defaultLayout;
 
     function register(name, layout) {
-        // console.log(name)
         _layouts[name] = layout;
         _defaultLayout = _defaultLayout || name;
     }
-    console.log(_defaultLayout)
+
     /**
      * @class Layout 布局基类，具体布局需要从该类派生
      */
     var Layout = kity.createClass('Layout', {
 
+        /**
+         * @abstract
+         *
+         * 子类需要实现的布局算法，该算法输入一个节点，排布该节点的子节点（相对父节点的变换）
+         *
+         * @param  {MinderNode} node 需要布局的节点
+         *
+         * @example
+         *
+         * doLayout: function(node) {
+         *     var children = node.getChildren();
+         *     // layout calculation
+         *     children[i].setLayoutTransform(new kity.Matrix().translate(x, y));
+         * }
+         */
+        doLayout: function(parent, children) {
+            throw new Error('Not Implement: Layout.doLayout()');
+        },
 
         /**
          * 对齐指定的节点
@@ -133,6 +152,9 @@ define(function(require, exports, module) {
 
                 treeBox = node.getContentBox();
 
+                if (node.isExpanded() && node.children.length) {
+                    treeBox = treeBox.merge(this.getTreeBox(node.children));
+                }
 
                 box = box.merge(matrix.transformBox(treeBox));
             }
@@ -140,19 +162,26 @@ define(function(require, exports, module) {
             return box;
         },
 
-      
+        getOrderHint: function(node) {
+            return [];
+        }
     });
 
     Layout.register = register;
 
+    Minder.registerInitHook(function(options) {
+        this.refresh();
+    });
 
     /**
      * 布局支持池子管理
      */
     utils.extend(Minder, {
+
         getLayoutList: function() {
             return _layouts;
         },
+
         getLayoutInstance: function(name) {
             var LayoutClass = _layouts[name];
             if (!LayoutClass) throw new Error('Missing Layout: ' + name);
@@ -293,12 +322,24 @@ define(function(require, exports, module) {
             this._layoutVectorOut = v;
             return this;
         },
+
+        getLayoutVectorIn: function() {
+            return this._layoutVectorIn || new kity.Vector();
+        },
+
+        getLayoutVectorOut: function() {
+            return this._layoutVectorOut || new kity.Vector();
+        },
+
         getLayoutBox: function() {
             var matrix = this.getGlobalLayoutTransform();
             return matrix.transformBox(this.getContentBox());
         },
 
- 
+        getLayoutPoint: function() {
+            var matrix = this.getGlobalLayoutTransform();
+            return matrix.transformPoint(new kity.Point());
+        },
 
         getLayoutOffset: function() {
             if (!this.parent) return new kity.Point();
@@ -310,6 +351,26 @@ define(function(require, exports, module) {
 
             return new kity.Point();
         },
+
+        setLayoutOffset: function(p) {
+            if (!this.parent) return this;
+
+            this.setData('layout_' + this.parent.getLayout() + '_offset', p ? {
+                x: p.x,
+                y: p.y
+            } : undefined);
+
+            return this;
+        },
+
+        hasLayoutOffset: function() {
+            return !!this.getData('layout_' + this.parent.getLayout() + '_offset');
+        },
+
+        resetLayoutOffset: function() {
+            return this.setLayoutOffset(null);
+        },
+
         getLayoutRoot: function() {
             if (this.isLayoutRoot()) {
                 return this;
@@ -328,44 +389,127 @@ define(function(require, exports, module) {
     kity.extendClass(Minder, {
 
         layout: function() {
+
+            var duration = this.getOption('layoutAnimationDuration');
+
+            this.getRoot().traverse(function(node) {
+                // clear last results
+                node.setLayoutTransform(null);
+            });
+
             function layoutNode(node, round) {
-                node.children.forEach(function(child) {
-                    layoutNode(child, round);
-                });
+
+                // layout all children first
+                // 剪枝：收起的节点无需计算
+                if (node.isExpanded() || true) {
+                    node.children.forEach(function(child) {
+                        layoutNode(child, round);
+                    });
+                }
 
                 var layout = node.getLayoutInstance();
+                // var childrenInFlow = node.getChildren().filter(function(child) {
+                //     return !child.hasLayoutOffset();
+                // });
                 layout.doLayout(node, node.getChildren(), round);
             }
 
             // 第一轮布局
             layoutNode(this.getRoot(), 1);
 
-            this.applyLayoutResult(this.getRoot());
+            // 第二轮布局
+            layoutNode(this.getRoot(), 2);
+
+            var minder = this;
+            this.applyLayoutResult(this.getRoot(), duration, function() {
+                /**
+                 * 当节点>200, 不使用动画时, 此处逻辑变为同步逻辑, 外部minder.on事件无法
+                 * 被提前录入, 因此增加setTimeout
+                 * @author Naixor
+                 */
+                setTimeout(function () {
+                    minder.fire('layoutallfinish');
+                }, 0);
+            });
 
             return this.fire('layout');
         },
 
         refresh: function() {
             this.getRoot().renderTree();
-            this.layout();
+            this.layout().fire('contentchange')._interactChange();
             return this;
         },
 
         applyLayoutResult: function(root, duration, callback) {
             root = root || this.getRoot();
             var me = this;
-            function applyMatrix(node, matrix) {
-                node.setGlobalLayoutTransform(matrix);
+
+            var complex = root.getComplex();
+
+            function consume() {
+                if (!--complex) {
+                    if (callback) {
+                        callback();
+                    }
+                }
             }
 
-            function apply(node, pMatrix) { 
-                var matrix = node.getLayoutTransform().merge(pMatrix.clone());
-                // 直接更新
-                applyMatrix(node, matrix);
-                me.fire('layoutfinish', {
+            // 节点复杂度大于 100，关闭动画
+            if (complex > 200) duration = 0;
+
+            function applyMatrix(node, matrix) {
+                node.setGlobalLayoutTransform(matrix);
+
+                me.fire('layoutapply', {
                     node: node,
                     matrix: matrix
                 });
+            }
+
+            function apply(node, pMatrix) {
+                var matrix = node.getLayoutTransform().merge(pMatrix.clone());
+                var lastMatrix = node.getGlobalLayoutTransform() || new kity.Matrix();
+
+                var offset = node.getLayoutOffset();
+                matrix.translate(offset.x, offset.y);
+
+                matrix.m.e = Math.round(matrix.m.e);
+                matrix.m.f = Math.round(matrix.m.f);
+
+                // 如果当前有动画，停止动画
+                if (node._layoutTimeline) {
+                    node._layoutTimeline.stop();
+                    node._layoutTimeline = null;
+                }
+
+                // 如果要求以动画形式来更新，创建动画
+                if (duration) {
+                    node._layoutTimeline = new kity.Animator(lastMatrix, matrix, applyMatrix)
+                        .start(node, duration, 'ease')
+                        .on('finish', function() {
+                            //可能性能低的时候会丢帧，手动添加一帧
+                            setTimeout(function() {
+                                applyMatrix(node, matrix);
+                                me.fire('layoutfinish', {
+                                    node: node,
+                                    matrix: matrix
+                                });
+                                consume();
+                            }, 150);
+                        });
+                }
+
+                // 否则直接更新
+                else {
+                    applyMatrix(node, matrix);
+                    me.fire('layoutfinish', {
+                        node: node,
+                        matrix: matrix
+                    });
+                    consume();
+                }
+
                 for (var i = 0; i < node.children.length; i++) {
                     apply(node.children[i], matrix);
                 }
