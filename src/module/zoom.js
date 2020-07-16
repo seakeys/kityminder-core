@@ -160,28 +160,19 @@ define(function(require, exports, module) {
                 'zoom': ZoomCommand
             },
             events: {
-                'normal.mousewheel readonly.mousewheel': function(e) {
+                "normal.mousewheel readonly.mousewheel": function(e) {
                     if (!e.originEvent.ctrlKey && !e.originEvent.metaKey) return;
-
                     var delta = e.originEvent.wheelDelta;
                     var me = this;
-                    // 稀释
-                    if (Math.abs(delta) > 100) {
-                        clearTimeout(this._wheelZoomTimeout);
-                    } else {
-                        return;
-                    }
-
-                    this._wheelZoomTimeout = setTimeout(function() {
-                        var value;
-                        var lastValue = me.getPaper()._zoom || 1;
-                        if (delta > 0) {
-                            me.execCommand('zoomin');
-                        } else if (delta < 0) {
-                            me.execCommand('zoomout');
+                    if (delta > 0 && me._zoomValue < 500) {
+                        if (me._zoomValue > 480) {
+                            me.execCommand("Zoom", 500);
+                        } else {
+                            me.execCommand("Zoom", parseInt(me._zoomValue * 1.05));
                         }
-                    }, 100);
-                    
+                    } else if (delta < 0 && me._zoomValue > 20) {
+                        me.execCommand("Zoom", parseInt(me._zoomValue / 1.05));
+                    }
                     e.originEvent.preventDefault();
                 }
             },

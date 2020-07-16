@@ -168,6 +168,7 @@ define(function(require, exports, module) {
             this._minder.layout(300);
             this._leaveDragMode();
             this._minder.fire('contentchange');
+            this._minder.execCommand('resetlayout')
         },
 
         // 进入拖放模式：

@@ -28,7 +28,7 @@ define(function(require, exports, module) {
             },
 
             getTemplate: function() {
-                return this._template || 'default';
+                return this._template || 'right';
             },
 
             setTemplate: function(name) {

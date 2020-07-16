@@ -41,8 +41,8 @@ define(function(require, exports, module) {
         pathData.push('M', start);
         pathData.push('A', abs(vector.x), abs(vector.y), 0, 0, (vector.x * vector.y > 0 ? 0 : 1), end);
 
-        connection.setMarker(connectMarker);
-        connectMarker.dot.fill(color);
+        // connection.setMarker(connectMarker);
+        // connectMarker.dot.fill(color);
 
         connection.setPathData(pathData);
     });

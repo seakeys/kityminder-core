@@ -17,7 +17,7 @@ define(function(require, exports, module) {
 
             // 记录选区的开始位置（mousedown的位置）
             var startPosition = null;
-
+            var saveNextNode = null;
             // 选区的图形
             var marqueeShape = new kity.Path();
 
@@ -39,9 +39,29 @@ define(function(require, exports, module) {
                     startPosition = e.getPosition(rc).round();
                 },
                 selectMove: function(e) {
-                    if (minder.getStatus() == 'textedit') {
-                        return;
+                    if (minder.getStatus() == 'textedit') return
+
+                    var getNode = e.getTargetNode()
+                    if (!marqueeMode){
+                        if (getNode) {
+                            var outline = getNode.getRenderContainer().getLastItem()
+                            if (getNode.type !== 'root') {
+                                outline.stroke('#4c9ff2').setStyle('strokeWidth', 2)
+                                saveNextNode = getNode
+                            } else if (getNode.type === 'root') {
+                                outline.stroke('#0d72d6').setStyle('strokeWidth', 3)
+                                saveNextNode = getNode
+                            }
+                        } else {
+                            if (saveNextNode && saveNextNode.isSelected()) return
+                            if (saveNextNode) {
+                                var outline = saveNextNode.getRenderContainer().getLastItem()
+                                outline.stroke('transparent')
+                            }
+                            saveNextNode = null
+                        }
                     }
+
                     if (!startPosition) return;
 
                     var p1 = startPosition,
@@ -118,7 +138,6 @@ define(function(require, exports, module) {
             },
             'events': {
                 'mousedown': function(e) {
-
                     var downNode = e.getTargetNode();
 
                     // 没有点中节点：
@@ -140,6 +159,7 @@ define(function(require, exports, module) {
                     //     单选点中的节点
                     else if (!downNode.isSelected()) {
                         this.select(downNode, true);
+                        downNode.getRenderContainer().getLastItem().stroke('#0d72d6')
                     }
 
                     // 点中的节点被选中了，并且不是单选：

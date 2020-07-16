@@ -233,8 +233,8 @@ define(function(require, exports, module) {
 
             this.importNode(this._root, json.root);
 
-            this.setTemplate(json.template || 'default');
-            this.setTheme(json.theme || null);
+            this.setTemplate(json.template || 'right');
+            this.setTheme(json.theme || 'fresh-blue');
             this.refresh();
 
             /**

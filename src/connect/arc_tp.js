@@ -74,8 +74,8 @@ define(function(require, exports, module) {
             pathData.push('M', end);
             pathData.push('A', jl2, jl2, 0, 0, 1, next_end);
 
-            nextConnection.setMarker(connectMarker);
-            connectMarker.dot.fill(color);
+            // nextConnection.setMarker(connectMarker);
+            // connectMarker.dot.fill(color);
 
             nextConnection.setPathData(pathData);
 

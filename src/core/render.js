@@ -249,10 +249,11 @@ define(function(require, exports, module) {
             //if (!this._contentBox) this.render();
             return this.parent && this.parent.isCollapsed() ? new kity.Box() : (this._contentBox || new kity.Box());
         },
-        getRenderBox: function(rendererType, refer) {
+        getRenderBox: function(rendererType, refer, editBug) {
             var renderer = rendererType && this.getRenderer(rendererType);
+            if (editBug) renderer.contentBox.y = -10
             var contentBox = renderer ? renderer.contentBox : this.getContentBox();
-            var ctm = kity.Matrix.getCTM(this.getRenderContainer(), refer || 'paper');
+            var ctm = kity.Matrix.getCTM(this.getRenderContainer(), refer || "paper");
             return ctm.transformBox(contentBox);
         }
     });

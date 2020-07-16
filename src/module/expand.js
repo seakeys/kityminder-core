@@ -150,8 +150,15 @@ define(function(require, exports, module) {
                     }
                     node.renderTree().getMinder().layout(100);
                     node.getMinder().fire('contentchange');
+                    node.getMinder().fire("expanderchange");
                     e.stopPropagation();
                     e.preventDefault();
+                });
+                this.on('mouseover', function(e) {
+                    this.outline.stroke('#262626').fill('#e8e8e8')
+                });
+                this.on('mouseleave', function(e) {
+                    this.outline.stroke('#262626').fill('#fcfcfc')
                 });
                 this.on('dblclick click mouseup', function(e) {
                     e.stopPropagation();
@@ -196,9 +203,13 @@ define(function(require, exports, module) {
 
                 expander.setState(visible && node.children.length ? node.getData(EXPAND_STATE_DATA) : 'hide');
 
-                var vector = node.getLayoutVectorIn().normalize(expander.radius + node.getStyle('stroke-width'));
+                var vector = null
+                if (node.getMinder()._template === 'right') {
+                    vector = node.getLayoutVectorIn().normalize(-(node.getContentBox().width + expander.radius + node.getStyle('stroke-width')));
+                } else {
+                    vector = node.getLayoutVectorIn().normalize(expander.radius + node.getStyle("stroke-width"));
+                }
                 var position = node.getVertexIn().offset(vector.reverse());
-
                 this.expander.setTranslate(position);
             }
         });

@@ -58,10 +58,33 @@ define(function(require, exports, module) {
                 .setSize(outlineBox.width, outlineBox.height)
                 .setRadius(radius)
                 .fill(node.getData('background') || node.getStyle(prefix + 'background') || node.getStyle('background'))
-                .stroke(node.getStyle(prefix + 'stroke' || node.getStyle('stroke')),
-                node.getStyle(prefix + 'stroke-width'));
+                .stroke('transparent', 8);
+
 
             return new kity.Box(outlineBox);
+        }
+    });
+
+    var selectedRenderer = kity.createClass('selectedRenderer', {
+        base: Renderer,
+
+        create: function(node) {
+            var outline = new kity.Rect().setId(utils.uuid('node_selected'));
+
+            return outline;
+        },
+        
+        update: function(outline, node, box) {
+            var radius = node.getStyle('radius');
+            var prefix = node.isSelected() ? (node.getMinder().isFocused() ? 'selected-' : 'blur-selected-') : '';
+            outline.setPosition(box.x - 5, box.y - 5)
+                .setSize(box.width + 10, box.height + 10)
+                .setRadius(radius)
+            if (prefix) {
+                outline.stroke(node.getStyle(prefix + 'stroke'), 2)
+            } else {
+                outline.stroke('transparent', 2)
+            }
         }
     });
 
@@ -158,7 +181,7 @@ define(function(require, exports, module) {
             }),
             renderers: {
                 outline: OutlineRenderer,
-                outside: [ShadowRenderer, WireframeRenderer]
+                outside: [ShadowRenderer, WireframeRenderer, selectedRenderer]
             }
         };
     });

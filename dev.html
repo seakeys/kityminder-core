@@ -22,50 +22,71 @@
             bottom: 10px;
             right: 10px;
         }
+        #app {
+            margin: 0;
+            padding: 0;
+            position: fixed;
+            z-index: 1000;
+            top: 20px;
+            left: 20px;
+        }
     </style>
-
+    <script crossorigin="anonymous" integrity="sha384-OZmxTjkv7EQo5XDMPAmIkkvywVeXw59YyYh6zq8UKfkbor13jS+5p8qMTBSA1q+F" src="https://lib.baomitu.com/vue/2.6.11/vue.min.js"></script>
     <script type="text/javascript" src="node_modules/kity/dist/kity.js"></script>
+    <script type="text/javascript" src="node_modules/seajs/dist/sea-debug.js"></script>
 </head>
 <body>
+    <div id="app">
+        <button @click="select('right')">right</button>
+        <button @click="select('default')">default</button>
+        <button @click="select('fish-bone')">fish-bone</button>
+        <button @click="select('filetree')">filetree</button>
+        <button @click="select('structure')">structure</button>
+    </div>
     <script id="minder-view" type="application/kityminder" minder-data-type="json">
-    {
-        "root": {
-            "data": {
-                "text": "百度产品",
-                "image": "https://www.baidu.com/img/bd_logo1.png?where=super",
-                "imageSize": { "width": 270, "height": 129 }
-            },
-            "children": [
-                { "data": { "text": "新闻" } },
-                { "data": { "text": "网页", "priority": 1 } },
-                { "data": { "text": "贴吧", "priority": 2 } },
-                { "data": { "text": "知道", "priority": 2 } },
-                { "data": { "text": "音乐", "priority": 3 } },
-                { "data": { "text": "图片", "priority": 3 } },
-                { "data": { "text": "视频", "priority": 3 } },
-                { "data": { "text": "地图", "priority": 3 } },
-                { "data": { "text": "百科", "priority": 3 } },
-                { "data": { "text": "更多", "hyperlink": "http://www.baidu.com/more" } }
-            ]
+        {
+            "root": {
+                "data": {
+                    "text": "百度产品"
+                },
+                "children": [
+                    { "data": { "text": "新闻" } },
+                    { "data": { "text": "网页", "priority": 1 } },
+                    { "data": { "text": "贴吧", "priority": 2 } },
+                    { "data": { "text": "知道", "priority": 2 } },
+                    { "data": { "text": "音乐", "priority": 3 } },
+                    { "data": { "text": "图片", "priority": 3 } },
+                    { "data": { "text": "视频", "priority": 3 } },
+                    { "data": { "text": "地图", "priority": 3 } },
+                    { "data": { "text": "百科", "priority": 3 } },
+                    { "data": { "text": "更多", "hyperlink": "http://www.baidu.com/more" } }
+                ]
+            }
         }
-    }
     </script>
+    <script>
+        new Vue({
+          el: '#app',
+          data: {
+            km: null
+          },
+          created () {
+            seajs.config({
+                base: './src'
+            });
+            define('start', (require) => {
+                var Minder = require('kityminder').Minder;
+                this.km = window.km = new Minder();
+                this.km.setup('#minder-view');
+            });
+            seajs.use('start');
+          },
+          methods: {
+            select (type) {
+                this.km.execCommand('template', type)
+            }
+          }
+        })
+        </script>
 </body>
-
-<!-- *************************** Module 形式加载引入 **************************** -->
-<script type="text/javascript" src="node_modules/seajs/dist/sea-debug.js"></script>
-<script type="text/javascript">
-    /* global seajs */
-    seajs.config({
-        base: './src'
-    });
-    define('start', function(require) {
-        var Minder = require('kityminder').Minder;
-
-        // 创建 km 实例
-        var km = window.km = new Minder();
-        km.setup('#minder-view');
-    });
-    seajs.use('start');
-</script>
 </html>

@@ -215,15 +215,27 @@ define(function(require, exports, module) {
         var CameraCommand = kity.createClass('CameraCommand', {
             base: Command,
             execute: function(km, focusNode) {
-
+                var template = km.getTemplate()
                 focusNode = focusNode || km.getRoot();
                 var viewport = km.getPaper().getViewPort();
                 var offset = focusNode.getRenderContainer().getRenderBox('view');
-                var dx = viewport.center.x - offset.x - offset.width / 2,
-                    dy = viewport.center.y - offset.y;
+                console.log(template)
+                var dx, dy
+                if (template === 'right' || template === 'fish-bone') {
+                    dx = viewport.center.x / 4 - offset.x - offset.width / 2
+                    dy = viewport.center.y - offset.y
+                } else if (template === 'filetree' || template === 'structure') {
+                    dx = viewport.center.x - offset.x - offset.width / 2
+                    dy = viewport.center.y / 4 - offset.y
+                } else {
+                    dx = viewport.center.x - offset.x - offset.width / 2
+                    dy = viewport.center.y - offset.y
+                }
+
                 var dragger = km._viewDragger;
 
                 var duration = km.getOption('viewAnimationDuration');
+                
                 dragger.move(new kity.Point(dx, dy), duration);
                 this.setContentChanged(false);
             },
@@ -246,6 +258,7 @@ define(function(require, exports, module) {
             base: Command,
 
             execute: function(km, dir) {
+                console.log(dir)
                 var dragger = km._viewDragger;
                 var size = km._lastClientSize;
                 var duration = km.getOption('viewAnimationDuration');

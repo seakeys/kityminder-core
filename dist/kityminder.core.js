@@ -1,9 +1,6 @@
 /*!
  * ====================================================
- * Kity Minder Core - v1.4.50 - 2018-09-17
- * https://github.com/fex-team/kityminder-core
- * GitHub: https://github.com/fex-team/kityminder-core.git 
- * Copyright (c) 2018 Baidu FEX; Licensed BSD-3-Clause
+ * Kity Minder Core - v1.4.50 - 2020-07-16
  * ====================================================
  */
 
@@ -70,8 +67,8 @@ _p[0] = {
             vector = kity.Vector.fromPoints(start, end);
             pathData.push("M", start);
             pathData.push("A", abs(vector.x), abs(vector.y), 0, 0, vector.x * vector.y > 0 ? 0 : 1, end);
-            connection.setMarker(connectMarker);
-            connectMarker.dot.fill(color);
+            // connection.setMarker(connectMarker);
+            // connectMarker.dot.fill(color);
             connection.setPathData(pathData);
         });
     }
@@ -134,8 +131,8 @@ _p[1] = {
                 pathData = [];
                 pathData.push("M", end);
                 pathData.push("A", jl2, jl2, 0, 0, 1, next_end);
-                nextConnection.setMarker(connectMarker);
-                connectMarker.dot.fill(color);
+                // nextConnection.setMarker(connectMarker);
+                // connectMarker.dot.fill(color);
                 nextConnection.setPathData(pathData);
             }
         });
@@ -943,8 +940,8 @@ _p[12] = {
                 }
                 json = compatibility(json);
                 this.importNode(this._root, json.root);
-                this.setTemplate(json.template || "default");
-                this.setTheme(json.theme || null);
+                this.setTemplate(json.template || "right");
+                this.setTheme(json.theme || "fresh-blue");
                 this.refresh();
                 /**
              * @event import,contentchange,interactchange
@@ -3119,8 +3116,9 @@ _p[27] = {
                 //if (!this._contentBox) this.render();
                 return this.parent && this.parent.isCollapsed() ? new kity.Box() : this._contentBox || new kity.Box();
             },
-            getRenderBox: function(rendererType, refer) {
+            getRenderBox: function(rendererType, refer, editBug) {
                 var renderer = rendererType && this.getRenderer(rendererType);
+                if (editBug) renderer.contentBox.y = -10;
                 var contentBox = renderer ? renderer.contentBox : this.getContentBox();
                 var ctm = kity.Matrix.getCTM(this.getRenderContainer(), refer || "paper");
                 return ctm.transformBox(contentBox);
@@ -3486,7 +3484,7 @@ _p[31] = {
                     this.refresh(duration || 800);
                 },
                 getTemplate: function() {
-                    return this._template || "default";
+                    return this._template || "right";
                 },
                 setTemplate: function(name) {
                     this._template = name || null;
@@ -3836,13 +3834,14 @@ _p[35] = {
         _p.r(38);
         _p.r(39);
         _p.r(41);
-        _p.r(75);
+        _p.r(76);
+        _p.r(79);
         _p.r(78);
         _p.r(77);
-        _p.r(76);
-        _p.r(78);
-        _p.r(80);
         _p.r(79);
+        _p.r(81);
+        _p.r(75);
+        _p.r(80);
         _p.r(0);
         _p.r(1);
         _p.r(2);
@@ -4835,6 +4834,7 @@ _p[45] = {
                 this._minder.layout(300);
                 this._leaveDragMode();
                 this._minder.fire("contentchange");
+                this._minder.execCommand("resetlayout");
             },
             // 进入拖放模式：
             //    1. 计算拖放源和允许的拖放目标
@@ -5178,8 +5178,15 @@ _p[46] = {
                         }
                         node.renderTree().getMinder().layout(100);
                         node.getMinder().fire("contentchange");
+                        node.getMinder().fire("expanderchange");
                         e.stopPropagation();
                         e.preventDefault();
+                    });
+                    this.on("mouseover", function(e) {
+                        this.outline.stroke("#262626").fill("#e8e8e8");
+                    });
+                    this.on("mouseleave", function(e) {
+                        this.outline.stroke("#262626").fill("#fcfcfc");
                     });
                     this.on("dblclick click mouseup", function(e) {
                         e.stopPropagation();
@@ -5216,7 +5223,12 @@ _p[46] = {
                     if (!node.parent) return;
                     var visible = node.parent.isExpanded();
                     expander.setState(visible && node.children.length ? node.getData(EXPAND_STATE_DATA) : "hide");
-                    var vector = node.getLayoutVectorIn().normalize(expander.radius + node.getStyle("stroke-width"));
+                    var vector = null;
+                    if (node.getMinder()._template === "right") {
+                        vector = node.getLayoutVectorIn().normalize(-(node.getContentBox().width + expander.radius + node.getStyle("stroke-width")));
+                    } else {
+                        vector = node.getLayoutVectorIn().normalize(expander.radius + node.getStyle("stroke-width"));
+                    }
                     var position = node.getVertexIn().offset(vector.reverse());
                     this.expander.setTranslate(position);
                 }
@@ -6311,8 +6323,25 @@ _p[55] = {
                     outlineBox.height = 2 * radius;
                 }
                 var prefix = node.isSelected() ? node.getMinder().isFocused() ? "selected-" : "blur-selected-" : "";
-                outline.setPosition(outlineBox.x, outlineBox.y).setSize(outlineBox.width, outlineBox.height).setRadius(radius).fill(node.getData("background") || node.getStyle(prefix + "background") || node.getStyle("background")).stroke(node.getStyle(prefix + "stroke" || node.getStyle("stroke")), node.getStyle(prefix + "stroke-width"));
+                outline.setPosition(outlineBox.x, outlineBox.y).setSize(outlineBox.width, outlineBox.height).setRadius(radius).fill(node.getData("background") || node.getStyle(prefix + "background") || node.getStyle("background")).stroke("transparent", 8);
                 return new kity.Box(outlineBox);
+            }
+        });
+        var selectedRenderer = kity.createClass("selectedRenderer", {
+            base: Renderer,
+            create: function(node) {
+                var outline = new kity.Rect().setId(utils.uuid("node_selected"));
+                return outline;
+            },
+            update: function(outline, node, box) {
+                var radius = node.getStyle("radius");
+                var prefix = node.isSelected() ? node.getMinder().isFocused() ? "selected-" : "blur-selected-" : "";
+                outline.setPosition(box.x - 5, box.y - 5).setSize(box.width + 10, box.height + 10).setRadius(radius);
+                if (prefix) {
+                    outline.stroke(node.getStyle(prefix + "stroke"), 2);
+                } else {
+                    outline.stroke("transparent", 2);
+                }
             }
         });
         var ShadowRenderer = kity.createClass("ShadowRenderer", {
@@ -6383,7 +6412,7 @@ _p[55] = {
                 },
                 renderers: {
                     outline: OutlineRenderer,
-                    outside: [ ShadowRenderer, WireframeRenderer ]
+                    outside: [ ShadowRenderer, WireframeRenderer, selectedRenderer ]
                 }
             };
         });
@@ -6988,6 +7017,7 @@ _p[59] = {
             var marqueeActivator = function() {
                 // 记录选区的开始位置（mousedown的位置）
                 var startPosition = null;
+                var saveNextNode = null;
                 // 选区的图形
                 var marqueeShape = new kity.Path();
                 // 标记是否已经启动框选状态
@@ -7005,8 +7035,26 @@ _p[59] = {
                         startPosition = e.getPosition(rc).round();
                     },
                     selectMove: function(e) {
-                        if (minder.getStatus() == "textedit") {
-                            return;
+                        if (minder.getStatus() == "textedit") return;
+                        var getNode = e.getTargetNode();
+                        if (!marqueeMode) {
+                            if (getNode) {
+                                var outline = getNode.getRenderContainer().getLastItem();
+                                if (getNode.type !== "root") {
+                                    outline.stroke("#4c9ff2").setStyle("strokeWidth", 2);
+                                    saveNextNode = getNode;
+                                } else if (getNode.type === "root") {
+                                    outline.stroke("#0d72d6").setStyle("strokeWidth", 3);
+                                    saveNextNode = getNode;
+                                }
+                            } else {
+                                if (saveNextNode && saveNextNode.isSelected()) return;
+                                if (saveNextNode) {
+                                    var outline = saveNextNode.getRenderContainer().getLastItem();
+                                    outline.stroke("transparent");
+                                }
+                                saveNextNode = null;
+                            }
                         }
                         if (!startPosition) return;
                         var p1 = startPosition, p2 = e.getPosition(rc);
@@ -7081,6 +7129,7 @@ _p[59] = {
                             this.toggleSelect(downNode);
                         } else if (!downNode.isSelected()) {
                             this.select(downNode, true);
+                            downNode.getRenderContainer().getLastItem().stroke("#0d72d6");
                         } else if (!this.isSingleSelect()) {
                             lastDownNode = downNode;
                             lastDownPosition = e.getPosition();
@@ -7406,10 +7455,9 @@ _p[61] = {
                     }
                 }
                 for (i = 0, text, textShape; text = textArr[i], textShape = textGroup.getItem(i); i++) {
-                    textShape.setContent(text);
-                    if (kity.Browser.ie || kity.Browser.edge) {
-                        textShape.fixPosition();
-                    }
+                    this._removeTextSpan(textShape);
+                    this._renderText(text, textShape);
+                    if (kity.Browser.ie || kity.Browser.edge) textShape.fixPosition();
                 }
                 this.setTextStyle(node, textGroup);
                 var textHash = node.getText() + [ "font-size", "font-name", "font-weight", "font-style" ].map(getDataOrStyle).join("/");
@@ -7427,11 +7475,338 @@ _p[61] = {
                     return nBox;
                 };
             },
+            _removeTextSpan: function(textShape) {
+                for (var i = 0; i < textShape.items.length; i++) {
+                    textShape.items[i].remove();
+                    textShape.items.length && this._removeTextSpan(textShape);
+                }
+            },
             setTextStyle: function(node, text) {
                 var hooks = TextRenderer._styleHooks;
                 hooks.forEach(function(hook) {
                     hook(node, text);
                 });
+            },
+            _boundary: function(i, len, md_flags, render_flags) {
+                if (i >= len && md_flags.length) {
+                    var item = md_flags.slice(-1)[0];
+                    item.end_pos = len;
+                    item.exit_flag = item.type.includes("text");
+                    if (!item.type.includes("text")) item.type = item.type + "_start";
+                    render_flags.push(item);
+                }
+            },
+            _markdown: function(text) {
+                var len = text.length;
+                var i = 0;
+                var md_flags = [];
+                var render_flags = [];
+                var flag = {
+                    exit_flag: false
+                };
+                while (i < len) {
+                    var ch = text.slice(i, i + 1);
+                    var ch2 = text.slice(i, i + 2);
+                    if (!flag.exit_flag && ch === "\\") {
+                        render_flags.push({
+                            type: "escape",
+                            exit_flag: true,
+                            current: "\\",
+                            start_pos: i,
+                            end_pos: i + 1
+                        });
+                        i += 2;
+                        this._boundary(i, len, md_flags, render_flags);
+                        continue;
+                    }
+                    if (flag.exit_flag) {
+                        if (ch === "\\") {
+                            i += 2;
+                            continue;
+                        }
+                        if (ch2 === flag.current) {
+                            flag.end_pos = i;
+                            if (flag.type.includes("start")) {
+                                flag.type = "bold_end";
+                                var start_idx = render_flags.findIndex(function(v) {
+                                    !v.exit_flag && v.type === "bold_start" && v.current === ch2;
+                                });
+                                var findItem = render_flags[start_idx];
+                                findItem.exit_flag = true;
+                                render_flags.splice(start_idx, 1, findItem);
+                            }
+                            render_flags.push({
+                                current: flag.current,
+                                end_pos: flag.end_pos,
+                                exit_flag: flag.exit_flag,
+                                start_pos: flag.start_pos,
+                                type: flag.type
+                            });
+                            if (md_flags.length) md_flags.pop();
+                            // 出栈
+                            i += 2;
+                            flag = {
+                                exit_flag: false
+                            };
+                            if (md_flags.length) {
+                                flag = md_flags[0];
+                                flag.exit_flag = true;
+                                flag.start_pos = i;
+                            }
+                            // console.log(flag, md_flags)
+                            // 处理以当前标识结尾的情况
+                            this._boundary(i, len, md_flags, render_flags);
+                            continue;
+                        }
+                        if (ch === flag.current) {
+                            flag.end_pos = i;
+                            if (flag.type.includes("start")) {
+                                flag.type = "italic_end";
+                                var italic_flag_idx = render_flags.findIndex(function(v) {
+                                    !v.exit_flag && v.type === "italic_start" && v.current === ch;
+                                });
+                                var findItem = render_flags[italic_flag_idx];
+                                findItem.exit_flag = true;
+                                render_flags.splice(italic_flag_idx, 1, findItem);
+                            }
+                            // console.log(render_flags, 'aaaaaa', md_flags)
+                            render_flags.push({
+                                current: flag.current,
+                                end_pos: flag.end_pos,
+                                exit_flag: flag.exit_flag,
+                                start_pos: flag.start_pos,
+                                type: flag.type
+                            });
+                            if (md_flags.length) md_flags.pop();
+                            // 出栈
+                            i++;
+                            flag = {
+                                exit_flag: false
+                            };
+                            if (md_flags.length) {
+                                flag = md_flags[0];
+                                flag.exit_flag = true;
+                                flag.start_pos = i;
+                            }
+                            // console.log('italic endend', flag);
+                            continue;
+                        }
+                        if (ch2 === "__" || ch2 === "**") {
+                            // 结束上一个栈
+                            flag.end_pos = i;
+                            flag.exit_flag = flag.type.includes("text");
+                            flag.type = [ "bold", "italic" ].includes(flag.type) ? flag.type + "_start" : flag.type;
+                            if (flag.start_pos !== flag.end_pos) render_flags.push({
+                                current: flag.current,
+                                end_pos: flag.end_pos,
+                                exit_flag: flag.exit_flag,
+                                start_pos: flag.start_pos,
+                                type: flag.type
+                            });
+                            if (flag.type.includes("text")) md_flags.pop();
+                            // 处理前面没结束掉的粗斜体
+                            var start_idx = render_flags.findIndex(function(v) {
+                                !v.exit_flag && v.current === ch2;
+                            });
+                            // console.log(render_flags, 'bold new start', start_idx, ch2);
+                            if (start_idx > -1) {
+                                var findItem = render_flags[start_idx];
+                                findItem.exit_flag = true;
+                                render_flags.splice(start_idx, 1, findItem);
+                                render_flags.push({
+                                    exit_flag: true,
+                                    current: ch2,
+                                    start_pos: i,
+                                    end_pos: i + 2,
+                                    type: "bold_end"
+                                });
+                                render_flags = render_flags.map(function(v, idx) {
+                                    if (idx > start_idx && !v.exit_flag) v.exit_flag = true;
+                                    return v;
+                                });
+                                flag = {
+                                    exit_flag: false
+                                };
+                                if (md_flags.length) md_flags.pop();
+                            } else {
+                                flag = {
+                                    exit_flag: true,
+                                    current: ch2,
+                                    start_pos: i,
+                                    type: "bold"
+                                };
+                                md_flags.push(flag);
+                            }
+                            i += 2;
+                            this._boundary(i, len, md_flags, render_flags);
+                            continue;
+                        }
+                        if (ch === "_" || ch === "*") {
+                            // // 结束上一个栈
+                            flag.end_pos = i;
+                            flag.exit_flag = flag.type.includes("text");
+                            flag.type = [ "bold", "italic" ].includes(flag.type) ? flag.type + "_start" : flag.type;
+                            if (flag.start_pos !== flag.end_pos) render_flags.push({
+                                current: flag.current,
+                                end_pos: flag.end_pos,
+                                exit_flag: flag.exit_flag,
+                                start_pos: flag.start_pos,
+                                type: flag.type
+                            });
+                            if (flag.type.includes("text")) md_flags.pop();
+                            // 处理前面没结束掉的粗斜体
+                            var start_idx = render_flags.findIndex(function(v) {
+                                !v.exit_flag && v.current === ch;
+                            });
+                            // console.log(render_flags, 'italic new start', start_idx, ch);
+                            if (start_idx > -1) {
+                                var findItem = render_flags[start_idx];
+                                findItem.exit_flag = true;
+                                render_flags.splice(start_idx, 1, findItem);
+                                render_flags.push({
+                                    exit_flag: true,
+                                    current: ch,
+                                    start_pos: i,
+                                    end_pos: i + 1,
+                                    type: "italic_end"
+                                });
+                                render_flags = render_flags.map(function(v, idx) {
+                                    if (idx > start_idx && !v.exit_flag) v.exit_flag = true;
+                                    return v;
+                                });
+                                flag = {
+                                    exit_flag: false
+                                };
+                                if (md_flags.length) md_flags.pop();
+                            } else {
+                                flag = {
+                                    exit_flag: true,
+                                    current: ch,
+                                    start_pos: i,
+                                    type: "italic"
+                                };
+                                md_flags.push(flag);
+                            }
+                            i++;
+                            this._boundary(i, len, md_flags, render_flags);
+                            continue;
+                        }
+                        var no_exit_arr = render_flags.filter(function(v) {
+                            !v.exit_flag;
+                        });
+                        if (no_exit_arr.length && flag.type.includes("start")) {
+                            flag = {
+                                exit_flag: true,
+                                current: "",
+                                start_pos: i,
+                                type: no_exit_arr.slice(-1)[0].type.includes("bold") ? "bold_text" : "italic_text"
+                            };
+                            md_flags.push(flag);
+                        }
+                    }
+                    if (!flag.exit_flag) {
+                        if (ch2 === "__" || ch2 === "**") {
+                            flag = {
+                                exit_flag: true,
+                                current: ch2,
+                                start_pos: i,
+                                type: "bold"
+                            };
+                            md_flags.push(flag);
+                            i += 2;
+                            this._boundary(i, len, md_flags, render_flags);
+                            continue;
+                        } else if (ch === "_" || ch === "*") {
+                            flag = {
+                                exit_flag: true,
+                                current: ch,
+                                start_pos: i,
+                                type: "italic"
+                            };
+                            md_flags.push(flag);
+                            i++;
+                            this._boundary(i, len, md_flags, render_flags);
+                            continue;
+                        } else if (flag.type !== "text") {
+                            flag = {
+                                exit_flag: true,
+                                current: "",
+                                start_pos: i,
+                                type: "text"
+                            };
+                            md_flags.push(flag);
+                            // console.log('ssss', flag);
+                            i++;
+                            this._boundary(i, len, md_flags, render_flags);
+                            continue;
+                        }
+                    }
+                    if (i === len - 1 && md_flags.length) {
+                        var item = md_flags.slice(-1)[0];
+                        item.end_pos = len;
+                        item.exit_flag = item.type.includes("text");
+                        if (!item.type.includes("text")) item.type = item.type + "_start";
+                        render_flags.push(item);
+                    }
+                    i++;
+                }
+                return render_flags;
+            },
+            _getEscapeRender: function(data) {
+                var escapereg = /[?=\\](.){1}/g;
+                return data.replace(escapereg, "$1");
+            },
+            _renderText: function(data, textShape) {
+                var _this = this;
+                var render_flags = _this._markdown(data);
+                return render_flags.reduce(function(prev, cur, index) {
+                    var str = "";
+                    if (cur.type === "text") {
+                        str = data.slice(cur.start_pos, cur.end_pos);
+                        textShape.addItem(new kity.TextSpan(str));
+                    }
+                    if (cur.type === "escape") {
+                        str = data.slice(cur.start_pos + 1, cur.end_pos + 1);
+                        textShape.addItem(new kity.TextSpan(str));
+                    }
+                    if (cur.type === "italic") {
+                        str = _this._getEscapeRender(data.slice(cur.start_pos + 1, cur.end_pos));
+                        var textSpan = new kity.TextSpan(str);
+                        textSpan.setStyle("font-style", "italic");
+                        textShape.addItem(textSpan);
+                    }
+                    if (cur.type === "italic_start") {
+                        str = _this._getEscapeRender(data.slice(cur.start_pos + 1, cur.end_pos));
+                        var textSpan = new kity.TextSpan(str);
+                        textSpan.setStyle("font-style", "italic");
+                        textShape.addItem(textSpan);
+                    }
+                    if (cur.type === "italic_text") {
+                        str = _this._getEscapeRender(data.slice(cur.start_pos, cur.end_pos));
+                        var textSpan = new kity.TextSpan(str);
+                        textSpan.setStyle("font-style", "italic");
+                        textShape.addItem(textSpan);
+                    }
+                    if (cur.type === "bold") {
+                        str = _this._getEscapeRender(data.slice(cur.start_pos + 2, cur.end_pos));
+                        var textSpan = new kity.TextSpan(str);
+                        textSpan.setStyle("font-weight", "bold");
+                        textShape.addItem(textSpan);
+                    }
+                    if (cur.type === "bold_start") {
+                        str = _this._getEscapeRender(data.slice(cur.start_pos + 2, cur.end_pos));
+                        var textSpan = new kity.TextSpan(str);
+                        textSpan.setStyle("font-weight", "bold");
+                        textShape.addItem(textSpan);
+                    }
+                    if (cur.type === "bold_text") {
+                        str = _this._getEscapeRender(data.slice(cur.start_pos, cur.end_pos));
+                        var textSpan = new kity.TextSpan(str);
+                        textSpan.setStyle("font-weight", "bold");
+                        textShape.addItem(textSpan);
+                    }
+                    return prev + str;
+                }, "");
             }
         });
         var TextCommand = kity.createClass({
@@ -7640,10 +8015,22 @@ _p[62] = {
             var CameraCommand = kity.createClass("CameraCommand", {
                 base: Command,
                 execute: function(km, focusNode) {
+                    var template = km.getTemplate();
                     focusNode = focusNode || km.getRoot();
                     var viewport = km.getPaper().getViewPort();
                     var offset = focusNode.getRenderContainer().getRenderBox("view");
-                    var dx = viewport.center.x - offset.x - offset.width / 2, dy = viewport.center.y - offset.y;
+                    console.log(template);
+                    var dx, dy;
+                    if (template === "right" || template === "fish-bone") {
+                        dx = viewport.center.x / 4 - offset.x - offset.width / 2;
+                        dy = viewport.center.y - offset.y;
+                    } else if (template === "filetree" || template === "structure") {
+                        dx = viewport.center.x - offset.x - offset.width / 2;
+                        dy = viewport.center.y / 4 - offset.y;
+                    } else {
+                        dx = viewport.center.x - offset.x - offset.width / 2;
+                        dy = viewport.center.y - offset.y;
+                    }
                     var dragger = km._viewDragger;
                     var duration = km.getOption("viewAnimationDuration");
                     dragger.move(new kity.Point(dx, dy), duration);
@@ -7666,6 +8053,7 @@ _p[62] = {
             var MoveCommand = kity.createClass("MoveCommand", {
                 base: Command,
                 execute: function(km, dir) {
+                    console.log(dir);
                     var dragger = km._viewDragger;
                     var size = km._lastClientSize;
                     var duration = km.getOption("viewAnimationDuration");
@@ -7949,21 +8337,15 @@ _p[63] = {
                         if (!e.originEvent.ctrlKey && !e.originEvent.metaKey) return;
                         var delta = e.originEvent.wheelDelta;
                         var me = this;
-                        // 稀释
-                        if (Math.abs(delta) > 100) {
-                            clearTimeout(this._wheelZoomTimeout);
-                        } else {
-                            return;
-                        }
-                        this._wheelZoomTimeout = setTimeout(function() {
-                            var value;
-                            var lastValue = me.getPaper()._zoom || 1;
-                            if (delta > 0) {
-                                me.execCommand("zoomin");
-                            } else if (delta < 0) {
-                                me.execCommand("zoomout");
+                        if (delta > 0 && me._zoomValue < 500) {
+                            if (me._zoomValue > 480) {
+                                me.execCommand("Zoom", 500);
+                            } else {
+                                me.execCommand("Zoom", parseInt(me._zoomValue * 1.05));
                             }
-                        }, 100);
+                        } else if (delta < 0 && me._zoomValue > 20) {
+                            me.execCommand("Zoom", parseInt(me._zoomValue / 1.05));
+                        }
                         e.originEvent.preventDefault();
                     }
                 },
@@ -9021,8 +9403,58 @@ _p[74] = {
     }
 };
 
-//src/theme/default.js
+//src/theme/dark.js
 _p[75] = {
+    value: function(require, exports, module) {
+        var theme = _p.r(32);
+        theme.register("dark", {
+            background: "#1e1c1a ",
+            "root-color": "#ffffff",
+            "root-background": "#4c9ff2",
+            "root-stroke": "transparent",
+            "root-font-size": 22,
+            "root-padding": [ 18, 32 ],
+            "root-margin": [ 30, 100 ],
+            "root-radius": 6,
+            "root-space": 10,
+            "main-color": "#1b1b1b",
+            "main-background": "#e8e8e8",
+            "main-stroke": "transparent",
+            "main-stroke-width": 0,
+            "main-font-size": 20,
+            "main-padding": [ 12.5, 32.5 ],
+            "main-margin": 20,
+            "main-radius": 6,
+            "main-space": 5,
+            "sub-color": "#1b1b1b",
+            "sub-background": "#e8e8e8",
+            "sub-stroke": "none",
+            "sub-font-size": 14,
+            "sub-padding": [ 8, 21.5 ],
+            "sub-margin": [ 15, 20 ],
+            "sub-radius": 6,
+            "sub-space": 5,
+            "connect-color": "#4d4d4d",
+            "connect-width": 2.5,
+            "connect-radius": 5,
+            "selected-stroke": "#4c9ff2",
+            "selected-stroke-width": "2",
+            "blur-selected-stroke": "#4c9ff2",
+            "marquee-background": "transparent",
+            "marquee-stroke": "#4c9ff2",
+            "drop-hint-color": "transparent",
+            "drop-hint-width": 8,
+            "order-hint-area-color": "#e8e8e8",
+            "order-hint-path-color": "#e8e8e8",
+            "order-hint-path-width": 0,
+            "text-selection-color": "#1b1b1b",
+            "line-height": 1.5
+        });
+    }
+};
+
+//src/theme/default.js
+_p[76] = {
     value: function(require, exports, module) {
         var theme = _p.r(32);
         [ "classic", "classic-compact" ].forEach(function(name) {
@@ -9081,7 +9513,7 @@ _p[75] = {
 };
 
 //src/theme/fish.js
-_p[76] = {
+_p[77] = {
     value: function(require, exports, module) {
         var theme = _p.r(32);
         theme.register("fish", {
@@ -9132,76 +9564,60 @@ _p[76] = {
 };
 
 //src/theme/fresh.js
-_p[77] = {
+_p[78] = {
     value: function(require, exports, module) {
-        var kity = _p.r(17);
         var theme = _p.r(32);
-        function hsl(h, s, l) {
-            return kity.Color.createHSL(h, s, l);
-        }
-        function generate(h, compat) {
+        function generate() {
             return {
-                background: "#fbfbfb",
-                "root-color": "white",
-                "root-background": hsl(h, 37, 60),
-                "root-stroke": hsl(h, 37, 60),
-                "root-font-size": 16,
-                "root-padding": compat ? [ 6, 12 ] : [ 12, 24 ],
-                "root-margin": compat ? 10 : [ 30, 100 ],
-                "root-radius": 5,
+                background: "#ffffff",
+                "root-color": "#ffffff",
+                "root-background": "#4c9ff2",
+                "root-stroke": "transparent",
+                "root-font-size": 22,
+                "root-padding": [ 18, 32 ],
+                "root-margin": [ 30, 100 ],
+                "root-radius": 6,
                 "root-space": 10,
-                "main-color": "black",
-                "main-background": hsl(h, 33, 95),
-                "main-stroke": hsl(h, 37, 60),
-                "main-stroke-width": 1,
-                "main-font-size": 14,
-                "main-padding": [ 6, 20 ],
-                "main-margin": compat ? 8 : 20,
-                "main-radius": 3,
+                "main-color": "#1b1b1b",
+                "main-background": "#e8e8e8",
+                "main-stroke": "transparent",
+                "main-stroke-width": 0,
+                "main-font-size": 20,
+                "main-padding": [ 12.5, 32.5 ],
+                "main-margin": 20,
+                "main-radius": 6,
                 "main-space": 5,
-                "sub-color": "black",
-                "sub-background": "transparent",
+                "sub-color": "#1b1b1b",
+                "sub-background": "#e8e8e8",
                 "sub-stroke": "none",
-                "sub-font-size": 12,
-                "sub-padding": compat ? [ 3, 5 ] : [ 5, 10 ],
-                "sub-margin": compat ? [ 4, 8 ] : [ 15, 20 ],
-                "sub-radius": 5,
+                "sub-font-size": 14,
+                "sub-padding": [ 8, 22 ],
+                "sub-margin": [ 15, 20 ],
+                "sub-radius": 6,
                 "sub-space": 5,
-                "connect-color": hsl(h, 37, 60),
-                "connect-width": 1,
+                "connect-color": "#262626",
+                "connect-width": 2.5,
                 "connect-radius": 5,
-                "selected-stroke": hsl(h, 26, 30),
-                "selected-stroke-width": "3",
-                "blur-selected-stroke": hsl(h, 10, 60),
-                "marquee-background": hsl(h, 100, 80).set("a", .1),
-                "marquee-stroke": hsl(h, 37, 60),
-                "drop-hint-color": hsl(h, 26, 35),
-                "drop-hint-width": 5,
-                "order-hint-area-color": hsl(h, 100, 30).set("a", .5),
-                "order-hint-path-color": hsl(h, 100, 25),
-                "order-hint-path-width": 1,
-                "text-selection-color": hsl(h, 100, 20),
+                "selected-stroke": "#4c9ff2",
+                "selected-stroke-width": "2",
+                "blur-selected-stroke": "#4c9ff2",
+                "marquee-background": "transparent",
+                "marquee-stroke": "#4c9ff2",
+                "drop-hint-color": "transparent",
+                "drop-hint-width": 8,
+                "order-hint-area-color": "#e8e8e8",
+                "order-hint-path-color": "#e8e8e8",
+                "order-hint-path-width": 0,
+                "text-selection-color": "#1b1b1b",
                 "line-height": 1.5
             };
         }
-        var plans = {
-            red: 0,
-            soil: 25,
-            green: 122,
-            blue: 204,
-            purple: 246,
-            pink: 334
-        };
-        var name;
-        for (name in plans) {
-            theme.register("fresh-" + name, generate(plans[name]));
-            theme.register("fresh-" + name + "-compat", generate(plans[name], true));
-        }
+        theme.register("fresh-blue", generate());
     }
 };
 
 //src/theme/snow.js
-_p[78] = {
+_p[79] = {
     value: function(require, exports, module) {
         var theme = _p.r(32);
         [ "snow", "snow-compact" ].forEach(function(name) {
@@ -9256,7 +9672,7 @@ _p[78] = {
 };
 
 //src/theme/tianpan.js
-_p[79] = {
+_p[80] = {
     value: function(require, exports, module) {
         var theme = _p.r(32);
         [ "tianpan", "tianpan-compact" ].forEach(function(name) {
@@ -9318,7 +9734,7 @@ _p[79] = {
 };
 
 //src/theme/wire.js
-_p[80] = {
+_p[81] = {
     value: function(require, exports, module) {
         var theme = _p.r(32);
         theme.register("wire", {

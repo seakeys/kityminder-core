@@ -85,6 +85,7 @@ define(function(require, exports, module) {
     require('./theme/fish');
     require('./theme/snow');
     require('./theme/wire');
+    require('./theme/dark');
     require('./theme/tianpan');
 
     require('./connect/arc');
