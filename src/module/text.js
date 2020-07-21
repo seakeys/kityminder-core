@@ -262,17 +262,17 @@ define(function(require, exports, module) {
             while (i < len) {
                 var ch = text.slice(i, i + 1)
                 var ch2 = text.slice(i, i + 2)
+                
             
                 if (!flag.exit_flag && ch === '\\') {
                     render_flags.push({
-                    type: 'escape',
-                    exit_flag: true,
-                    current: '\\',
-                    start_pos: i,
-                    end_pos: i + 1
+                        type: 'escape',
+                        exit_flag: true,
+                        current: '\\',
+                        start_pos: i,
+                        end_pos: i + 1
                     })
                     i += 2
-            
                     this._boundary(i, len, md_flags, render_flags)
                     continue
                 }
@@ -287,7 +287,7 @@ define(function(require, exports, module) {
                         flag.end_pos = i
                         if (flag.type.includes('start')) {
                             flag.type = 'bold_end'
-                            var start_idx = render_flags.findIndex(function(v) { !v.exit_flag && v.type === 'bold_start' && v.current === ch2 })
+                            var start_idx = render_flags.findIndex(function(v) { return !v.exit_flag && v.type === 'bold_start' && v.current === ch2 })
                             var findItem = render_flags[start_idx]
                             findItem.exit_flag = true
                             render_flags.splice(start_idx, 1, findItem)
@@ -318,7 +318,7 @@ define(function(require, exports, module) {
                     flag.end_pos = i
                     if (flag.type.includes('start')) {
                         flag.type = 'italic_end'
-                        var italic_flag_idx = render_flags.findIndex(function(v) { !v.exit_flag && v.type === 'italic_start' && v.current === ch })
+                        var italic_flag_idx = render_flags.findIndex(function(v) { return !v.exit_flag && v.type === 'italic_start' && v.current === ch })
                         var findItem = render_flags[italic_flag_idx]
                         findItem.exit_flag = true
                         render_flags.splice(italic_flag_idx, 1, findItem)
@@ -360,7 +360,7 @@ define(function(require, exports, module) {
                     if (flag.type.includes('text')) md_flags.pop()
             
                     // 处理前面没结束掉的粗斜体
-                    var start_idx = render_flags.findIndex(function(v) { !v.exit_flag && v.current === ch2 })
+                    var start_idx = render_flags.findIndex(function(v) {return !v.exit_flag && v.current === ch2 })
                     // console.log(render_flags, 'bold new start', start_idx, ch2);
                     if (start_idx > -1) {
                         var findItem = render_flags[start_idx]
@@ -413,7 +413,7 @@ define(function(require, exports, module) {
                     if (flag.type.includes('text')) md_flags.pop()
             
                     // 处理前面没结束掉的粗斜体
-                    var start_idx = render_flags.findIndex(function(v) { !v.exit_flag && v.current === ch })
+                    var start_idx = render_flags.findIndex(function(v) { return !v.exit_flag && v.current === ch })
                     // console.log(render_flags, 'italic new start', start_idx, ch);
                     if (start_idx > -1) {
                         var findItem = render_flags[start_idx]
@@ -448,7 +448,7 @@ define(function(require, exports, module) {
                     continue
                     }
             
-                    var no_exit_arr = render_flags.filter(function(v) { !v.exit_flag } )
+                    var no_exit_arr = render_flags.filter(function(v) {return !v.exit_flag } )
                     if (no_exit_arr.length && flag.type.includes('start')) {
                     flag = {
                         exit_flag: true,
@@ -461,20 +461,18 @@ define(function(require, exports, module) {
                     md_flags.push(flag)
                     }
                 }
-            
+
                 if (!flag.exit_flag) {
                     if (ch2 === '__' || ch2 === '**') {
-                    flag = {
-                        exit_flag: true,
-                        current: ch2,
-                        start_pos: i,
-                        type: 'bold'
-                    }
-                    md_flags.push(flag)
-                    i += 2
-            
-                    this._boundary(i, len, md_flags, render_flags)
-                    continue
+                        md_flags.push({
+                            exit_flag: true,
+                            current: ch2,
+                            start_pos: i,
+                            type: 'bold'
+                        })
+                        i += 2
+                        this._boundary(i, len, md_flags, render_flags)
+                        continue
                     } else if (ch === '_' || ch === '*') {
                     flag = {
                         exit_flag: true,

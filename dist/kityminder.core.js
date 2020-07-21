@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * Kity Minder Core - v1.4.50 - 2020-07-16
+ * Kity Minder Core - v1.4.50 - 2020-07-21
  * ====================================================
  */
 
@@ -7529,7 +7529,7 @@ _p[61] = {
                             if (flag.type.includes("start")) {
                                 flag.type = "bold_end";
                                 var start_idx = render_flags.findIndex(function(v) {
-                                    !v.exit_flag && v.type === "bold_start" && v.current === ch2;
+                                    return !v.exit_flag && v.type === "bold_start" && v.current === ch2;
                                 });
                                 var findItem = render_flags[start_idx];
                                 findItem.exit_flag = true;
@@ -7563,7 +7563,7 @@ _p[61] = {
                             if (flag.type.includes("start")) {
                                 flag.type = "italic_end";
                                 var italic_flag_idx = render_flags.findIndex(function(v) {
-                                    !v.exit_flag && v.type === "italic_start" && v.current === ch;
+                                    return !v.exit_flag && v.type === "italic_start" && v.current === ch;
                                 });
                                 var findItem = render_flags[italic_flag_idx];
                                 findItem.exit_flag = true;
@@ -7606,7 +7606,7 @@ _p[61] = {
                             if (flag.type.includes("text")) md_flags.pop();
                             // 处理前面没结束掉的粗斜体
                             var start_idx = render_flags.findIndex(function(v) {
-                                !v.exit_flag && v.current === ch2;
+                                return !v.exit_flag && v.current === ch2;
                             });
                             // console.log(render_flags, 'bold new start', start_idx, ch2);
                             if (start_idx > -1) {
@@ -7656,7 +7656,7 @@ _p[61] = {
                             if (flag.type.includes("text")) md_flags.pop();
                             // 处理前面没结束掉的粗斜体
                             var start_idx = render_flags.findIndex(function(v) {
-                                !v.exit_flag && v.current === ch;
+                                return !v.exit_flag && v.current === ch;
                             });
                             // console.log(render_flags, 'italic new start', start_idx, ch);
                             if (start_idx > -1) {
@@ -7692,7 +7692,7 @@ _p[61] = {
                             continue;
                         }
                         var no_exit_arr = render_flags.filter(function(v) {
-                            !v.exit_flag;
+                            return !v.exit_flag;
                         });
                         if (no_exit_arr.length && flag.type.includes("start")) {
                             flag = {
@@ -7706,13 +7706,12 @@ _p[61] = {
                     }
                     if (!flag.exit_flag) {
                         if (ch2 === "__" || ch2 === "**") {
-                            flag = {
+                            md_flags.push({
                                 exit_flag: true,
                                 current: ch2,
                                 start_pos: i,
                                 type: "bold"
-                            };
-                            md_flags.push(flag);
+                            });
                             i += 2;
                             this._boundary(i, len, md_flags, render_flags);
                             continue;
