@@ -1,6 +1,6 @@
 /*!
  * ====================================================
- * Kity Minder Core - v1.4.50 - 2020-07-21
+ * Kity Minder Core - v1.4.50 - 2020-07-27
  * ====================================================
  */
 
@@ -3805,7 +3805,6 @@ _p[35] = {
         _p.r(43);
         _p.r(44);
         _p.r(45);
-        _p.r(46);
         _p.r(47);
         _p.r(48);
         _p.r(50);
@@ -3815,6 +3814,7 @@ _p[35] = {
         _p.r(53);
         _p.r(54);
         _p.r(55);
+        _p.r(46);
         _p.r(56);
         _p.r(57);
         _p.r(58);
@@ -5167,6 +5167,7 @@ _p[46] = {
                     this.initEvent(node);
                     this.setId(utils.uuid("node_expander"));
                     this.setStyle("cursor", "pointer");
+                    console.log(11111);
                 },
                 initEvent: function(node) {
                     this.on("mousedown", function(e) {
@@ -5177,8 +5178,8 @@ _p[46] = {
                             node.expand();
                         }
                         node.renderTree().getMinder().layout(100);
-                        node.getMinder().fire("contentchange");
                         node.getMinder().fire("expanderchange");
+                        node.getMinder().fire("contentchange");
                         e.stopPropagation();
                         e.preventDefault();
                     });
@@ -5211,7 +5212,7 @@ _p[46] = {
                 create: function(node) {
                     if (node.isRoot()) return;
                     this.expander = new Expander(node);
-                    node.getRenderContainer().prependShape(this.expander);
+                    node.getRenderContainer().addShape(this.expander);
                     node.expanderRenderer = this;
                     this.node = node;
                     return this.expander;
@@ -6299,6 +6300,8 @@ _p[55] = {
             base: Renderer,
             create: function(node) {
                 var outline = new kity.Rect().setId(utils.uuid("node_outline"));
+                console.log(node.getRenderContainer());
+                node.getRenderContainer().prependShape(outline);
                 this.bringToBack = true;
                 return outline;
             },
@@ -6336,7 +6339,7 @@ _p[55] = {
             update: function(outline, node, box) {
                 var radius = node.getStyle("radius");
                 var prefix = node.isSelected() ? node.getMinder().isFocused() ? "selected-" : "blur-selected-" : "";
-                outline.setPosition(box.x - 5, box.y - 5).setSize(box.width + 10, box.height + 10).setRadius(radius);
+                outline.setPosition(box.x - 3, box.y - 3).setSize(box.width + 6, box.height + 6).setRadius(radius);
                 if (prefix) {
                     outline.stroke(node.getStyle(prefix + "stroke"), 2);
                 } else {
@@ -7039,7 +7042,7 @@ _p[59] = {
                         var getNode = e.getTargetNode();
                         if (!marqueeMode) {
                             if (getNode) {
-                                var outline = getNode.getRenderContainer().getLastItem();
+                                var outline = getNode.getRenderContainer().getItem(2);
                                 if (getNode.type !== "root") {
                                     outline.stroke("#4c9ff2").setStyle("strokeWidth", 2);
                                     saveNextNode = getNode;
@@ -7050,7 +7053,7 @@ _p[59] = {
                             } else {
                                 if (saveNextNode && saveNextNode.isSelected()) return;
                                 if (saveNextNode) {
-                                    var outline = saveNextNode.getRenderContainer().getLastItem();
+                                    var outline = saveNextNode.getRenderContainer().getItem(2);
                                     outline.stroke("transparent");
                                 }
                                 saveNextNode = null;
@@ -7507,7 +7510,16 @@ _p[61] = {
                 while (i < len) {
                     var ch = text.slice(i, i + 1);
                     var ch2 = text.slice(i, i + 2);
-                    if (!flag.exit_flag && ch === "\\") {
+                    if ([ "text", undefined ].includes(flag.type) && ch === "\\") {
+                        if (flag.type === "text") {
+                            flag.end_pos = i;
+                            render_flags.push(flag);
+                            if (md_flags.length) md_flags.pop();
+                            // 出栈
+                            flag = {
+                                exit_flag: false
+                            };
+                        }
                         render_flags.push({
                             type: "escape",
                             exit_flag: true,
@@ -7553,7 +7565,6 @@ _p[61] = {
                                 flag.exit_flag = true;
                                 flag.start_pos = i;
                             }
-                            // console.log(flag, md_flags)
                             // 处理以当前标识结尾的情况
                             this._boundary(i, len, md_flags, render_flags);
                             continue;
@@ -7569,7 +7580,6 @@ _p[61] = {
                                 findItem.exit_flag = true;
                                 render_flags.splice(italic_flag_idx, 1, findItem);
                             }
-                            // console.log(render_flags, 'aaaaaa', md_flags)
                             render_flags.push({
                                 current: flag.current,
                                 end_pos: flag.end_pos,
@@ -7588,7 +7598,6 @@ _p[61] = {
                                 flag.exit_flag = true;
                                 flag.start_pos = i;
                             }
-                            // console.log('italic endend', flag);
                             continue;
                         }
                         if (ch2 === "__" || ch2 === "**") {
@@ -7608,7 +7617,6 @@ _p[61] = {
                             var start_idx = render_flags.findIndex(function(v) {
                                 return !v.exit_flag && v.current === ch2;
                             });
-                            // console.log(render_flags, 'bold new start', start_idx, ch2);
                             if (start_idx > -1) {
                                 var findItem = render_flags[start_idx];
                                 findItem.exit_flag = true;
@@ -7658,7 +7666,6 @@ _p[61] = {
                             var start_idx = render_flags.findIndex(function(v) {
                                 return !v.exit_flag && v.current === ch;
                             });
-                            // console.log(render_flags, 'italic new start', start_idx, ch);
                             if (start_idx > -1) {
                                 var findItem = render_flags[start_idx];
                                 findItem.exit_flag = true;
@@ -7706,12 +7713,13 @@ _p[61] = {
                     }
                     if (!flag.exit_flag) {
                         if (ch2 === "__" || ch2 === "**") {
-                            md_flags.push({
+                            flag = {
                                 exit_flag: true,
                                 current: ch2,
                                 start_pos: i,
                                 type: "bold"
-                            });
+                            };
+                            md_flags.push(flag);
                             i += 2;
                             this._boundary(i, len, md_flags, render_flags);
                             continue;
@@ -7734,7 +7742,6 @@ _p[61] = {
                                 type: "text"
                             };
                             md_flags.push(flag);
-                            // console.log('ssss', flag);
                             i++;
                             this._boundary(i, len, md_flags, render_flags);
                             continue;

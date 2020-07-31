@@ -149,8 +149,8 @@ define(function(require, exports, module) {
                         node.expand();
                     }
                     node.renderTree().getMinder().layout(100);
-                    node.getMinder().fire('contentchange');
                     node.getMinder().fire("expanderchange");
+                    node.getMinder().fire('contentchange');
                     e.stopPropagation();
                     e.preventDefault();
                 });
@@ -186,7 +186,7 @@ define(function(require, exports, module) {
             create: function(node) {
                 if (node.isRoot()) return;
                 this.expander = new Expander(node);
-                node.getRenderContainer().prependShape(this.expander);
+                node.getRenderContainer().addShape(this.expander);
                 node.expanderRenderer = this;
                 this.node = node;
                 return this.expander;

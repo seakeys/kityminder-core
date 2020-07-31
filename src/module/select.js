@@ -44,7 +44,7 @@ define(function(require, exports, module) {
                     var getNode = e.getTargetNode()
                     if (!marqueeMode){
                         if (getNode) {
-                            var outline = getNode.getRenderContainer().getLastItem()
+                            var outline = getNode.getRenderContainer().getItem(2)
                             if (getNode.type !== 'root') {
                                 outline.stroke('#4c9ff2').setStyle('strokeWidth', 2)
                                 saveNextNode = getNode
@@ -55,7 +55,7 @@ define(function(require, exports, module) {
                         } else {
                             if (saveNextNode && saveNextNode.isSelected()) return
                             if (saveNextNode) {
-                                var outline = saveNextNode.getRenderContainer().getLastItem()
+                                var outline = saveNextNode.getRenderContainer().getItem(2)
                                 outline.stroke('transparent')
                             }
                             saveNextNode = null

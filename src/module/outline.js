@@ -13,11 +13,11 @@ define(function(require, exports, module) {
 
         create: function(node) {
 
-            var outline = new kity.Rect()
-                .setId(utils.uuid('node_outline'));
+            var outline = new kity.Rect().setId(utils.uuid('node_outline'));
+
+            node.getRenderContainer().prependShape(outline);
 
             this.bringToBack = true;
-
             return outline;
         },
 
@@ -77,8 +77,8 @@ define(function(require, exports, module) {
         update: function(outline, node, box) {
             var radius = node.getStyle('radius');
             var prefix = node.isSelected() ? (node.getMinder().isFocused() ? 'selected-' : 'blur-selected-') : '';
-            outline.setPosition(box.x - 5, box.y - 5)
-                .setSize(box.width + 10, box.height + 10)
+            outline.setPosition(box.x - 3, box.y - 3)
+                .setSize(box.width + 6, box.height + 6)
                 .setRadius(radius)
             if (prefix) {
                 outline.stroke(node.getStyle(prefix + 'stroke'), 2)

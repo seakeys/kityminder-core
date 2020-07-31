@@ -264,7 +264,13 @@ define(function(require, exports, module) {
                 var ch2 = text.slice(i, i + 2)
                 
             
-                if (!flag.exit_flag && ch === '\\') {
+                if (['text', undefined].includes(flag.type) && ch === '\\') {
+                    if (flag.type === 'text') {
+                        flag.end_pos = i
+                        render_flags.push(flag)
+                        if (md_flags.length) md_flags.pop() // 出栈
+                        flag = { exit_flag: false }
+                    }
                     render_flags.push({
                         type: 'escape',
                         exit_flag: true,
@@ -273,6 +279,7 @@ define(function(require, exports, module) {
                         end_pos: i + 1
                     })
                     i += 2
+                
                     this._boundary(i, len, md_flags, render_flags)
                     continue
                 }
@@ -307,7 +314,6 @@ define(function(require, exports, module) {
                             flag.exit_flag = true
                             flag.start_pos = i
                         }
-                        // console.log(flag, md_flags)
                 
                         // 处理以当前标识结尾的情况
                         this._boundary(i, len, md_flags, render_flags)
@@ -323,7 +329,6 @@ define(function(require, exports, module) {
                         findItem.exit_flag = true
                         render_flags.splice(italic_flag_idx, 1, findItem)
                     }
-                    // console.log(render_flags, 'aaaaaa', md_flags)
                     render_flags.push({ 
                         current: flag.current,
                         end_pos: flag.end_pos,
@@ -339,7 +344,6 @@ define(function(require, exports, module) {
                         flag.exit_flag = true
                         flag.start_pos = i
                     }
-                    // console.log('italic endend', flag);
                     continue
                     }
             
@@ -361,7 +365,6 @@ define(function(require, exports, module) {
             
                     // 处理前面没结束掉的粗斜体
                     var start_idx = render_flags.findIndex(function(v) {return !v.exit_flag && v.current === ch2 })
-                    // console.log(render_flags, 'bold new start', start_idx, ch2);
                     if (start_idx > -1) {
                         var findItem = render_flags[start_idx]
                         findItem.exit_flag = true
@@ -380,7 +383,6 @@ define(function(require, exports, module) {
                         flag = { exit_flag: false }
                         if (md_flags.length) md_flags.pop()
             
-                        // console.log(render_flags, flag);
                     } else {
                         flag = {
                         exit_flag: true,
@@ -414,7 +416,6 @@ define(function(require, exports, module) {
             
                     // 处理前面没结束掉的粗斜体
                     var start_idx = render_flags.findIndex(function(v) { return !v.exit_flag && v.current === ch })
-                    // console.log(render_flags, 'italic new start', start_idx, ch);
                     if (start_idx > -1) {
                         var findItem = render_flags[start_idx]
                         findItem.exit_flag = true
@@ -464,12 +465,13 @@ define(function(require, exports, module) {
 
                 if (!flag.exit_flag) {
                     if (ch2 === '__' || ch2 === '**') {
-                        md_flags.push({
+                        flag = {
                             exit_flag: true,
                             current: ch2,
                             start_pos: i,
                             type: 'bold'
-                        })
+                        }
+                        md_flags.push(flag)
                         i += 2
                         this._boundary(i, len, md_flags, render_flags)
                         continue
@@ -493,7 +495,6 @@ define(function(require, exports, module) {
                         type: 'text'
                     }
                     md_flags.push(flag)
-                    // console.log('ssss', flag);
                     i++
             
                     this._boundary(i, len, md_flags, render_flags)

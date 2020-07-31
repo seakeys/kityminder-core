@@ -42,6 +42,8 @@
         <button @click="select('fish-bone')">fish-bone</button>
         <button @click="select('filetree')">filetree</button>
         <button @click="select('structure')">structure</button>
+        <button @click="expand()">展开节点</button>
+        <button @click="collapse()">关闭节点</button>
     </div>
     <script id="minder-view" type="application/kityminder" minder-data-type="json">
         {
@@ -50,11 +52,24 @@
                     "text": "百度产品"
                 },
                 "children": [
+                    { 
+                        "data": { "text": "Designsy", "priority": 1, "id": 66 },
+                        "children": [
+                            { 
+                                "data": { "text": "Designsy", "id": 4 },
+                                "children": [
+                                    { "data": { "text": "Designsy", "id": 5 } },
+                                    { "data": { "text": "Designsy", "id": 5 } },
+                                    { "data": { "text": "Designsy", "id": 5 } }
+                                ]
+                            }
+                        ]
+                    },
                     { "data": { "text": "*粗体__粗体__粗体*" } },
                     { "data": { "text": "*粗体__粗体__粗体*", "priority": 1 } },
                     { "data": { "text": "*粗体*斜体*粗体*", "priority": 2 } },
-                    { "data": { "text": "知道", "priority": 2 } },
-                    { "data": { "text": "音乐", "priority": 3 } },
+                    { "data": { "text": "123\\123\\123", "priority": 2 } },
+                    { "data": { "text": "**12*ddddd*456**", "priority": 3 } },
                     { "data": { "text": "图片", "priority": 3 } },
                     { "data": { "text": "视频", "priority": 3 } },
                     { "data": { "text": "地图", "priority": 3 } },
@@ -84,6 +99,20 @@
           methods: {
             select (type) {
                 this.km.execCommand('template', type)
+            },
+            expand () {
+                const node = this.km.getNodeById(66)
+                node.expand();
+                node.renderTree();
+                this.km.layout();
+                // this.km.execCommand('expand', node)
+            },
+            collapse () {
+                const node = this.km.getNodeById(66)
+                node.collapse();
+                node.renderTree();
+                this.km.layout();
+                // this.km.execCommand('collapse', node)
             }
           }
         })

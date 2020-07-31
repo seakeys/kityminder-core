@@ -47,7 +47,6 @@ define(function(require, exports, module) {
     require('./module/basestyle');
     require('./module/clipboard');
     require('./module/dragtree');
-    require('./module/expand');
     require('./module/font');
     require('./module/hyperlink');
     require('./module/image');
@@ -57,6 +56,7 @@ define(function(require, exports, module) {
     require('./module/node');
     require('./module/note');
     require('./module/outline');
+    require('./module/expand');
     require('./module/priority');
     require('./module/progress');
     require('./module/resource');
